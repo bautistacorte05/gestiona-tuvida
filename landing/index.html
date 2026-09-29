@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gestiona tu vida</title>
+  <meta name="description" content="Descargá Gestiona tu vida para Windows." />
+  <style>
+    :root {
+      --ink-950: #16120f; --ink-900: #1f1a16; --ink-800: #2a2118; --ink-400: #a6987c; --ink-300: #c4b69c; --ink-100: #ede3d3;
+      --shu-500: #bf3b2e; --shu-600: #a5301f; --shu-400: #d3624e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; background: var(--ink-950); color: var(--ink-100);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; line-height: 1.5;
+      display: flex; justify-content: center; padding: 48px 16px;
+    }
+    main { width: 100%; max-width: 560px; }
+    .eyebrow { color: var(--shu-400); font-size: 14px; margin: 0; }
+    h1 { font-size: 40px; margin: 4px 0 12px; }
+    .lead { color: var(--ink-300); font-size: 18px; margin: 0 0 32px; }
+    .download {
+      display: block; text-align: center; text-decoration: none; background: var(--shu-500); color: var(--ink-100);
+      font-size: 20px; font-weight: 700; padding: 18px 24px; border-radius: 12px;
+    }
+    .download:hover, .download:focus-visible { background: var(--shu-600); }
+    .req { color: var(--ink-400); font-size: 14px; text-align: center; margin: 10px 0 40px; }
+    .card { background: var(--ink-900); border: 1px solid var(--ink-800); border-radius: 12px; padding: 20px 24px; }
+    .card h2 { font-size: 18px; margin: 0 0 12px; }
+    ol { margin: 0; padding-left: 20px; color: var(--ink-300); }
+    li + li { margin-top: 10px; }
+    strong { color: var(--ink-100); }
+    .note { color: var(--ink-400); font-size: 14px; margin: 16px 0 0; }
+    .banner { display: none; border-radius: 12px; padding: 16px 20px; margin: 0 0 32px; font-size: 16px; }
+    .banner.ok { display: block; background: #1f2a20; border: 1px solid #4c7a52; color: #8fb894; }
+    .banner.err { display: block; background: #2a1c18; border: 1px solid #7a3226; color: #c98a7c; }
+    .banner strong { color: inherit; }
+  </style>
+</head>
+<body>
+  <main>
+    <div id="banner" class="banner" role="status"></div>
+    <p class="eyebrow">Para Windows</p>
+    <h1>Gestiona tu vida</h1>
+    <p class="lead">Tus hábitos, finanzas, metas y tu mascota, en un solo lugar. Entrás con tu cuenta y se sincroniza con el celular.</p>
+
+    <a class="download" href="https://github.com/bautistacorte05/gestiona-tuvida/releases/latest/download/Gestionatuvida.exe">
+      Descargar para Windows
+    </a>
+    <p class="req">Windows 10 u 11 · Se actualiza sola</p>
+
+    <section class="card">
+      <h2>Cómo instalarla</h2>
+      <ol>
+        <li>Tocá el botón de arriba y abrí el archivo <strong>Gestionatuvida.exe</strong> cuando termine de bajar.</li>
+        <li>Si aparece una pantalla azul que dice <strong>"Windows protegió su PC"</strong>, es normal: tocá <strong>"Más información"</strong> y después <strong>"Ejecutar de todas formas"</strong>.</li>
+        <li>Seguí los pasos del instalador. Al terminar vas a tener <strong>Gestiona tu vida</strong> en el escritorio.</li>
+      </ol>
+      <p class="note">Ese aviso aparece porque la app es nueva y todavía no tiene firma digital, no porque sea peligrosa. Solo aparece la primera vez.</p>
+    </section>
+  </main>
+  <script>
+    // El link del mail de confirmación de la cuenta vuelve acá con datos en la URL.
+    (function () {
+      var params = new URLSearchParams(location.hash.slice(1) + '&' + location.search.slice(1));
+      var banner = document.getElementById('banner');
+      if (params.get('error')) {
+        var expired = params.get('error_code') === 'otp_expired';
+        banner.className = 'banner err';
+        banner.innerHTML = expired
+          ? '<strong>El link venció.</strong> Volvé a la app y creá la cuenta de nuevo para recibir un mail nuevo.'
+          : '<strong>No se pudo confirmar la cuenta.</strong> Probá abrir el link del mail otra vez.';
+      } else if (params.get('access_token') || params.get('type') === 'signup' || params.get('code')) {
+        banner.className = 'banner ok';
+        banner.innerHTML = '<strong>¡Cuenta confirmada!</strong> Ya podés volver a la app e iniciar sesión con tu email y contraseña.';
+      } else {
+        return;
+      }
+      // No dejar datos de la sesión a la vista en la barra de direcciones.
+      history.replaceState(null, '', location.pathname);
+    })();
+  </script>
+</body>
+</html>

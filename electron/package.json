@@ -1,0 +1,12 @@
+{
+  "name": "gestion-squali-desktop",
+  "productName": "Gestiona tu vida",
+  "version": "1.0.1",
+  "description": "Gestiona tu vida para Windows",
+  "author": "bautistacorte05",
+  "main": "main.js",
+  "private": true,
+  "dependencies": {
+    "electron-updater": "^6.8.9"
+  }
+}

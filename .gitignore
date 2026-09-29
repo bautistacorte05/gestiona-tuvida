@@ -9,6 +9,12 @@ dist/
 web-build/
 expo-env.d.ts
 
+# Electron (app de escritorio)
+release/
+
+# Vercel (página de descarga)
+.vercel/
+
 # Native
 .kotlin/
 *.orig.*
