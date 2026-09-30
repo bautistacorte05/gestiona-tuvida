@@ -173,6 +173,8 @@ export interface SyncMeta {
   lastPulledAt?: string
   /** Marca para la que ya se hizo la bajada con margen hacia atrás (ver lib/sync.ts). */
   pullOverlapFor?: string
+  /** Colecciones que conocía esta versión en la última bajada (si cambian, se re-baja todo). */
+  pulledCollections?: string
   /** Registros con cambios locales todavía no subidos. */
   pending: Record<string, true>
   /** Momento (ms) de la última edición conocida de cada registro: decide qué versión gana. */

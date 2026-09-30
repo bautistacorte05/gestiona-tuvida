@@ -166,8 +166,13 @@ async function push() {
   }
 }
 
+// Una versión vieja de la app ignora las colecciones que no conoce, pero igual avanza la marca de
+// "ya bajé hasta acá". Si la versión nueva suma colecciones, se re-baja todo una vez para no perderlas.
+const COLLECTIONS_KEY = SYNCED_COLLECTIONS.join(',');
+
 async function pull() {
-  const { lastPulledAt: last, pullOverlapFor } = useDb.getState().sync;
+  const { lastPulledAt: savedMark, pullOverlapFor, pulledCollections } = useDb.getState().sync;
+  const last = pulledCollections === COLLECTIONS_KEY ? savedMark : undefined;
   const withOverlap = !!last && pullOverlapFor !== last;
   const since = !last ? null : withOverlap ? new Date(toMs(last) - PULL_OVERLAP_MS).toISOString() : last;
   let from = 0;
@@ -193,7 +198,9 @@ async function pull() {
     if (page.length < PULL_PAGE) break;
     from += PULL_PAGE;
   }
-  untracked(() => setSync({ lastPulledAt: maxSeen, pullOverlapFor: withOverlap ? last : pullOverlapFor }));
+  untracked(() =>
+    setSync({ lastPulledAt: maxSeen, pullOverlapFor: withOverlap ? last : last ? pullOverlapFor : undefined, pulledCollections: COLLECTIONS_KEY }),
+  );
 }
 
 function applyRemote(records: RemoteRecord[]) {
