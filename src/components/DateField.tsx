@@ -2,6 +2,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useState } from 'react';
 import { Modal, Pressable, Text, View } from 'react-native';
 import { formatDay } from '../lib/dates';
+import { useScheme } from '../lib/theme';
 
 /**
  * Botón que abre el selector de fecha nativo de iOS, en una hoja aparte a ancho completo.
@@ -10,6 +11,7 @@ import { formatDay } from '../lib/dates';
  */
 export default function DateField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const [open, setOpen] = useState(false);
+  const scheme = useScheme();
   const [draft, setDraft] = useState(value ? new Date(value + 'T00:00:00') : new Date());
 
   const openPicker = () => {
@@ -41,13 +43,13 @@ export default function DateField({ value, onChange }: { value: string; onChange
               value={draft}
               mode="date"
               display="inline"
-              themeVariant="dark"
+              themeVariant={scheme}
               accentColor="#bf3b2e"
               onChange={(_, d) => d && setDraft(d)}
               style={{ alignSelf: 'stretch' }}
             />
             <Pressable onPress={confirm} className="mt-3 items-center justify-center rounded-lg bg-shu-500 py-2.5">
-              <Text className="font-medium text-ink-100">Confirmar</Text>
+              <Text className="font-medium text-washi">Confirmar</Text>
             </Pressable>
           </Pressable>
         </Pressable>

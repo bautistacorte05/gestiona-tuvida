@@ -112,36 +112,54 @@ useDb.subscribe((state, prev) => {
 
 // ── Subir / bajar ────────────────────────────────────────────────────────────
 
+// Código de Postgres cuando un registro no cumple una regla de la tabla (check_violation).
+const REJECTED_BY_RULES = '23514';
+
 async function push() {
   const { pending, stamps, tombstones } = useDb.getState().sync;
   const keys = Object.keys(pending);
   for (let i = 0; i < keys.length; i += PUSH_BATCH) {
     const batch = keys.slice(i, i + PUSH_BATCH);
     const items: object[] = [];
+    const itemKeys: string[] = [];
+    /** Registros que viajan en este lote, con el sello de edición que tenían al salir. */
     const sent: Record<string, number> = {};
+    /** Claves que ya no existen (o no se sincronizan): se descartan de pendientes. */
+    const orphans = new Set<string>();
     for (const k of batch) {
       const { collection, id } = splitKey(k);
-      if (!isSynced(collection)) continue;
-      const stamp = stamps[k] ?? Date.now();
+      const record = isSynced(collection) ? rows(collection).find((r) => r.id === id) : undefined;
       if (tombstones[k] != null) {
         items.push({ collection, id, data: null, deleted: true, updated_at: tombstones[k] });
+      } else if (record) {
+        items.push({ collection, id, data: record, deleted: false, updated_at: stamps[k] ?? Date.now() });
       } else {
-        const record = rows(collection).find((r) => r.id === id);
-        if (!record) continue;
-        items.push({ collection, id, data: record, deleted: false, updated_at: stamp });
+        orphans.add(k);
+        continue;
       }
+      itemKeys.push(k);
       sent[k] = stamps[k];
     }
     if (items.length) {
       const { error } = await supabase.rpc('sync_push', { items });
-      if (error) throw error;
-      if (__DEV__) console.log(`[sync] subidos ${items.length} registros`);
+      if (error?.code === REJECTED_BY_RULES) {
+        // Un registro que el servidor rechaza (tipo no permitido, demasiado grande) no frena a
+        // los demás: se suben de a uno y el rechazado queda pendiente para reintentar.
+        for (let j = 0; j < items.length; j++) {
+          const one = await supabase.rpc('sync_push', { items: [items[j]] });
+          if (one.error?.code === REJECTED_BY_RULES) {
+            delete sent[itemKeys[j]];
+            if (__DEV__) console.warn(`[sync] el servidor rechazó ${itemKeys[j]}: ${one.error.message}`);
+          } else if (one.error) throw one.error;
+        }
+      } else if (error) throw error;
+      if (__DEV__) console.log(`[sync] subidos ${Object.keys(sent).length} de ${items.length} registros`);
     }
-    // Solo se da por subido lo que no se volvió a editar mientras viajaba.
+    // Solo se da por subido lo que llegó y no se volvió a editar mientras viajaba.
     untracked(() =>
       useDb.setState((s) => {
         const next = { ...s.sync.pending };
-        for (const k of batch) if (s.sync.stamps[k] === sent[k] || !(k in sent)) delete next[k];
+        for (const k of batch) if (orphans.has(k) || (k in sent && s.sync.stamps[k] === sent[k])) delete next[k];
         return { sync: { ...s.sync, pending: next } };
       }),
     );
@@ -275,6 +293,9 @@ function clearLocalData() {
       petCommands: [],
       petWalks: [],
       trainingProgress: [],
+      userProfile: [],
+      dayTasks: [],
+      fixedTasks: [],
       sync: { pending: {}, stamps: {}, tombstones: {} },
     }),
   );

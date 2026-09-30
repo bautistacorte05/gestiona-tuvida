@@ -155,7 +155,7 @@ export default function SubView({ category, sub }: { category: Category; sub: Su
             <Text className="font-semibold text-ink-100">Registros</Text>
             {(!isPetOwned || hasPets) && (
               <Pressable onPress={() => setEditing('new')} className="rounded-lg bg-shu-500 px-4 py-2.5">
-                <Text className="font-medium text-ink-100">+ Agregar</Text>
+                <Text className="font-medium text-washi">+ Agregar</Text>
               </Pressable>
             )}
           </View>

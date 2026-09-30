@@ -1,3 +1,5 @@
+const themed = (name) => `rgb(var(--${name}) / <alpha-value>)`;
+
 /** @type {import('tailwindcss').Config} */
 // Misma paleta "Shu no Michi" que la app web (src/index.css allá).
 module.exports = {
@@ -5,22 +7,27 @@ module.exports = {
   presets: [require('nativewind/preset')],
   theme: {
     extend: {
+      // Los tonos que cambian entre modo claro y oscuro son variables: los valores de cada modo
+      // están en src/lib/theme.ts. Los 500/600 (fondos de botones) y `washi` (texto sobre esos
+      // fondos) son fijos.
       colors: {
         ink: {
-          100: '#ede3d3',
-          200: '#dcd0bc',
-          300: '#c4b69c',
-          400: '#a6987c',
-          500: '#877a61',
-          700: '#35291f',
-          800: '#2a2118',
-          900: '#1f1a16',
-          950: '#16120f',
+          100: themed('ink-100'),
+          200: themed('ink-200'),
+          300: themed('ink-300'),
+          400: themed('ink-400'),
+          500: themed('ink-500'),
+          600: themed('ink-600'),
+          700: themed('ink-700'),
+          800: themed('ink-800'),
+          900: themed('ink-900'),
+          950: themed('ink-950'),
         },
-        shu: { 300: '#e08575', 400: '#d3624e', 500: '#bf3b2e', 600: '#a5301f' },
-        gold: { 300: '#dcc28a', 400: '#c9a860', 500: '#b8934b' },
-        moss: { 300: '#8fb894', 400: '#6b9a72', 500: '#4c7a52' },
-        kurenai: { 300: '#c98a7c', 400: '#a85445', 500: '#7a3226' },
+        shu: { 300: themed('shu-300'), 400: themed('shu-400'), 500: '#bf3b2e', 600: '#a5301f' },
+        gold: { 300: themed('gold-300'), 400: themed('gold-400'), 500: '#b8934b' },
+        moss: { 300: themed('moss-300'), 400: themed('moss-400'), 500: '#4c7a52' },
+        kurenai: { 300: themed('kurenai-300'), 400: themed('kurenai-400'), 500: '#7a3226' },
+        washi: '#ede3d3',
       },
     },
   },

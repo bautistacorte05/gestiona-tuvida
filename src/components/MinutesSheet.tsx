@@ -68,7 +68,7 @@ export default function MinutesSheet({ category, date, current, onClose }: Props
               </Pressable>
             )}
             <Pressable onPress={() => save(min)} disabled={!min} className={`flex-1 items-center justify-center rounded-lg bg-shu-500 py-2.5 ${!min ? 'opacity-50' : ''}`}>
-              <Text className="font-medium text-ink-100">Guardar {min ? `· ${formatMinutes(min)}` : ''}</Text>
+              <Text className="font-medium text-washi">Guardar {min ? `· ${formatMinutes(min)}` : ''}</Text>
             </Pressable>
           </View>
         </Pressable>

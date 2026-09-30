@@ -3,8 +3,11 @@ import { useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, View, type TextStyle } from 'react-native';
 
 import { CATEGORIES } from '../config/categories';
+import Avatar from './Avatar';
 import { useAuth } from '../lib/auth';
+import { useDb } from '../lib/db';
 import { signOutWithConfirm } from '../lib/signOut';
+import { useThemeColors } from '../lib/theme';
 import { useUiPrefs } from '../lib/uiPrefs';
 
 const EXPANDED_WIDTH = 256;
@@ -27,7 +30,7 @@ const SECTIONS: { title: string; items: Item[] }[] = [
   })),
 ];
 
-const ALL_HREFS = [...SECTIONS.flatMap((s) => s.items.map((i) => i.href)), '/ajustes'];
+const ALL_HREFS = SECTIONS.flatMap((s) => s.items.map((i) => i.href));
 
 // Efecto "Dock" de la Mac con la barra achicada: el ícono bajo el mouse crece y sus vecinos un poco.
 const MAGNIFY = [1.6, 1.25, 1.1];
@@ -80,7 +83,7 @@ function SidebarItem({
         {item.icon}
       </Text>
       {!collapsed && (
-        <Text numberOfLines={1} className={`flex-1 text-sm ${active ? 'font-semibold text-ink-100' : 'text-ink-300'}`}>
+        <Text numberOfLines={1} className={`flex-1 text-sm ${active ? 'font-semibold text-washi' : 'text-ink-300'}`}>
           {item.label}
         </Text>
       )}
@@ -97,6 +100,7 @@ export default function AppSidebar() {
   const collapsed = useUiPrefs((s) => s.sidebarCollapsed);
   const toggle = useUiPrefs((s) => s.toggleSidebar);
   const [tip, setTip] = useState<Tip | null>(null);
+  const c = useThemeColors();
   const [hovered, setHovered] = useState<string | null>(null);
   const hoveredIndex = hovered ? ALL_HREFS.indexOf(hovered) : -1;
 
@@ -105,20 +109,14 @@ export default function AppSidebar() {
     return MAGNIFY[Math.abs(ALL_HREFS.indexOf(href) - hoveredIndex)] ?? 1;
   };
   const email = session?.user.email ?? '';
-  const initials = email.slice(0, 2).toUpperCase();
+  const profile = useDb((s) => s.userProfile[0]);
+  const displayName = [profile?.nombre, profile?.apellido].filter(Boolean).join(' ') || email;
 
   const go = (href: string) => {
     setTip(null);
     setHovered(null);
     if (href === pathname) return;
-    if (href.startsWith('/c/')) {
-      // Entre categorías se reemplaza la pantalla: sin flecha para volver, apilarlas no sirve.
-      if (pathname.startsWith('/c/')) router.replace(href as never);
-      else router.push(href as never);
-      return;
-    }
-    // Hoy/Mes/Ajustes viven debajo de las categorías: primero se cierran las que haya encima.
-    if (router.canDismiss()) router.dismissAll();
+    // Todas las pantallas (también las categorías) viven en el mismo menú: se navega directo.
     router.navigate(href as never);
   };
 
@@ -134,7 +132,7 @@ export default function AppSidebar() {
 
   return (
     // zIndex: el cartelito se dibuja por fuera de la barra, encima del contenido.
-    <View style={{ width: collapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH, zIndex: 10, backgroundColor: '#1f1a16', borderRightWidth: 1, borderRightColor: '#2a2118' }}>
+    <View style={{ width: collapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH, zIndex: 10, backgroundColor: c['ink-900'], borderRightWidth: 1, borderRightColor: c['ink-800'] }}>
       <View className={`flex-row items-center pb-3 pt-4 ${collapsed ? 'justify-center' : 'justify-between pl-5 pr-2'}`}>
         {!collapsed && <Text className="text-sm font-semibold text-shu-400">Gestiona tu vida</Text>}
         <Pressable
@@ -165,23 +163,26 @@ export default function AppSidebar() {
         ))}
       </ScrollView>
 
-      <View className="gap-1 border-t border-ink-800 py-2">
-        <SidebarItem {...itemProps({ href: '/ajustes', icon: '⚙️', label: 'Ajustes', hint: 'Ajustes y cuenta' })} />
-        <View className={`flex-row items-center ${collapsed ? 'justify-center py-1' : 'gap-3 px-4 py-1'}`}>
-          <View className="h-8 w-8 items-center justify-center rounded-full bg-shu-500">
-            <Text className="text-xs font-bold text-ink-100">{initials}</Text>
+      {/* La foto de perfil es la entrada a Ajustes (no hay ítem de engranaje). */}
+      <View className={`flex-row items-center border-t border-ink-800 py-3 ${collapsed ? 'justify-center' : 'gap-2 pl-3 pr-2'}`}>
+        <Pressable
+          onPress={() => go('/ajustes')}
+          accessibilityLabel="Perfil y ajustes"
+          className={`flex-row items-center rounded-xl ${collapsed ? 'p-1' : 'flex-1 gap-3 p-1 pr-2'} ${pathname === '/ajustes' ? 'bg-shu-500/20' : 'hover:bg-ink-800/70'}`}>
+          <View style={{ borderRadius: 20, borderWidth: 2, borderColor: pathname === '/ajustes' ? '#bf3b2e' : 'transparent' }}>
+            <Avatar profile={profile} email={email} size={32} />
           </View>
           {!collapsed && (
-            <>
-              <Text numberOfLines={1} className="flex-1 text-xs text-ink-300">
-                {email}
-              </Text>
-              <Pressable onPress={() => void signOutWithConfirm()} accessibilityLabel="Cerrar sesión" className="rounded-lg px-2 py-1 hover:bg-ink-800/70">
-                <Text className="text-xs text-kurenai-300">Salir</Text>
-              </Pressable>
-            </>
+            <Text numberOfLines={1} className={`flex-1 text-xs ${pathname === '/ajustes' ? 'font-semibold text-ink-100' : 'text-ink-300'}`}>
+              {displayName}
+            </Text>
           )}
-        </View>
+        </Pressable>
+        {!collapsed && (
+          <Pressable onPress={() => void signOutWithConfirm()} accessibilityLabel="Cerrar sesión" className="rounded-lg px-2 py-1 hover:bg-ink-800/70">
+            <Text className="text-xs text-kurenai-300">Salir</Text>
+          </Pressable>
+        )}
       </View>
 
       {tip && (

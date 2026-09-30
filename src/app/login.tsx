@@ -83,7 +83,7 @@ export default function LoginScreen() {
           {!!info && <Text className="text-sm text-moss-300">{info}</Text>}
 
           <Pressable onPress={submit} disabled={busy} className={`items-center rounded-lg bg-shu-500 py-3 ${busy ? 'opacity-60' : ''}`}>
-            {busy ? <ActivityIndicator color="#ede3d3" /> : <Text className="font-semibold text-ink-100">{mode === 'signIn' ? 'Entrar' : 'Crear cuenta'}</Text>}
+            {busy ? <ActivityIndicator color="#ede3d3" /> : <Text className="font-semibold text-washi">{mode === 'signIn' ? 'Entrar' : 'Crear cuenta'}</Text>}
           </Pressable>
 
           <Pressable onPress={switchMode} className="items-center py-2">

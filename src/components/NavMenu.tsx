@@ -3,6 +3,9 @@ import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import { CATEGORIES, COLOR_CLASSES } from '../config/categories';
+import { useAuth } from '../lib/auth';
+import { useDb } from '../lib/db';
+import Avatar from './Avatar';
 
 function NavLink({ icon, label, active, onPress }: { icon: string; label: string; active: boolean; onPress: () => void }) {
   return (
@@ -14,8 +17,8 @@ function NavLink({ icon, label, active, onPress }: { icon: string; label: string
 }
 
 /**
- * Contenido del menú (el drawer ☰ del celular y la barra fija de la PC): Hoy/Mes arriba,
- * todas las categorías con acordeón para sus subcategorías, y Ajustes abajo.
+ * Contenido del menú ☰ del celular: tu foto y nombre arriba (entrada a Ajustes, sin engranaje),
+ * Hoy/Mes, y todas las categorías con acordeón para sus subcategorías.
  * `onNavigate` recibe la ruta; cada plataforma decide cómo navegar.
  */
 export default function NavMenu({ onNavigate }: { onNavigate: (href: string) => void }) {
@@ -23,9 +26,27 @@ export default function NavMenu({ onNavigate }: { onNavigate: (href: string) => 
   const [, currentCat, currentSub] = /^\/c\/([^/]+)\/([^/]+)/.exec(pathname) ?? [];
   // La categoría actual arranca desplegada; lo que el usuario abra o cierre a mano tiene prioridad.
   const [toggled, setToggled] = useState<Record<string, boolean>>({});
+  const { session } = useAuth();
+  const profile = useDb((s) => s.userProfile[0]);
+  const email = session?.user.email ?? '';
+  const fullName = [profile?.nombre, profile?.apellido].filter(Boolean).join(' ');
+  const inSettings = pathname === '/ajustes';
 
   return (
     <View>
+      <Pressable
+        onPress={() => onNavigate('/ajustes')}
+        accessibilityLabel="Perfil y ajustes"
+        className={`mx-2 mb-2 flex-row items-center gap-3 rounded-xl px-3 py-3 ${inSettings ? 'bg-shu-500/20' : 'active:bg-ink-800/60'}`}>
+        <Avatar profile={profile} email={email} size={44} />
+        <View className="flex-1">
+          <Text numberOfLines={1} className="text-base font-semibold text-ink-100">
+            {fullName || email}
+          </Text>
+          <Text className="text-xs text-ink-400">Ver perfil y ajustes</Text>
+        </View>
+      </Pressable>
+
       <NavLink icon="📅" label="Hoy" active={pathname === '/'} onPress={() => onNavigate('/')} />
       <NavLink icon="📈" label="Mes" active={pathname === '/mes'} onPress={() => onNavigate('/mes')} />
 
@@ -44,7 +65,7 @@ export default function NavMenu({ onNavigate }: { onNavigate: (href: string) => 
               <Text className="text-xs text-ink-500">{isOpen ? '▼' : '▶'}</Text>
             </Pressable>
             {isOpen && (
-              <View className="ml-7 border-l pl-2" style={{ borderColor: '#2a2118' }}>
+              <View className="ml-7 border-l border-ink-800 pl-2">
                 {cat.subcategories.map((sub) => {
                   const active = cat.id === currentCat && sub.id === currentSub;
                   return (
@@ -62,10 +83,6 @@ export default function NavMenu({ onNavigate }: { onNavigate: (href: string) => 
           </View>
         );
       })}
-
-      <View className="mx-4 my-2 h-px bg-ink-800" />
-
-      <NavLink icon="⚙️" label="Ajustes" active={pathname === '/ajustes'} onPress={() => onNavigate('/ajustes')} />
     </View>
   );
 }

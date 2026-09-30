@@ -118,7 +118,7 @@ export default function PetLostView() {
             </View>
 
             <Pressable onPress={share} disabled={busy} className="items-center justify-center rounded-lg bg-kurenai-500 py-2.5">
-              <Text className="font-medium text-ink-100">Compartir cartel</Text>
+              <Text className="font-medium text-washi">Compartir cartel</Text>
             </Pressable>
           </>
         )}

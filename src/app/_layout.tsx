@@ -1,9 +1,11 @@
 import '../global.css';
+// Define la tarea del paseo en segundo plano apenas carga la app (Android puede despertarla solo para eso).
+import '../lib/walkTracker';
 
-import { DarkTheme, ThemeProvider } from 'expo-router';
-import { Stack } from 'expo-router';
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { StatusBar } from 'expo-status-bar';
+import { useEffect, useMemo } from 'react';
 import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
@@ -11,6 +13,7 @@ import AppSidebar from '../components/AppSidebar';
 import { AuthProvider, useAuth } from '../lib/auth';
 import { useIsDesktop } from '../lib/layout';
 import { startSync, stopSync } from '../lib/sync';
+import { applyPageTheme, themeVars, useScheme, useThemeColors } from '../lib/theme';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -18,6 +21,7 @@ function RootStack() {
   const { session, loading } = useAuth();
   const userId = session?.user.id;
   const isDesktop = useIsDesktop();
+  const c = useThemeColors();
 
   useEffect(() => {
     if (!loading) SplashScreen.hideAsync();
@@ -29,13 +33,12 @@ function RootStack() {
   }, [userId]);
 
   return (
-    <View style={{ flex: 1, flexDirection: 'row', backgroundColor: '#16120f' }}>
+    <View style={{ flex: 1, flexDirection: 'row', backgroundColor: c['ink-950'] }}>
       {isDesktop && !!session && <AppSidebar />}
       <View style={{ flex: 1 }}>
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#16120f' } }}>
+        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c['ink-950'] } }}>
           <Stack.Protected guard={!!session}>
             <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="c/[categoryId]/[subId]" />
           </Stack.Protected>
           <Stack.Protected guard={!session}>
             <Stack.Screen name="login" />
@@ -43,16 +46,27 @@ function RootStack() {
         </Stack>
       </View>
       {/* En web/PC no hay splash nativo: tapa el login un instante hasta saber si ya había sesión. */}
-      {loading && <View style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: '#16120f' }} />}
+      {loading && <View style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: c['ink-950'] }} />}
     </View>
   );
 }
 
-// La app siempre es oscura (paleta "Shu no Michi"), igual que la web.
+// Paleta "Shu no Michi" en modo oscuro o claro (Ajustes → Apariencia; ver lib/theme.ts).
 export default function RootLayout() {
+  const scheme = useScheme();
+  const c = useThemeColors();
+
+  useEffect(() => applyPageTheme(scheme), [scheme]);
+
+  const navTheme = useMemo(() => {
+    const base = scheme === 'dark' ? DarkTheme : DefaultTheme;
+    return { ...base, colors: { ...base.colors, background: c['ink-950'], card: c['ink-900'], border: c['ink-800'], text: c['ink-100'], primary: '#bf3b2e' } };
+  }, [scheme, c]);
+
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <ThemeProvider value={DarkTheme}>
+    <GestureHandlerRootView style={[{ flex: 1 }, themeVars(scheme)]}>
+      <ThemeProvider value={navTheme}>
+        <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
         <AuthProvider>
           <RootStack />
         </AuthProvider>

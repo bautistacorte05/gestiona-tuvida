@@ -2,11 +2,12 @@
 -- (el registro de cuentas es abierto). No cambia nada para el uso normal de la app.
 -- Pegar entero en Supabase → SQL Editor → Run.
 --
--- Si la app suma una colección nueva en SYNCED_COLLECTIONS (src/lib/db.ts), hay que agregarla acá.
+-- Colecciones: nombres cortos de solo letras (no una lista fija: con lista, cada tipo de dato
+-- nuevo de la app necesitaba otro script, y aplicarla sobre datos ya existentes fallaba).
 
 alter table public.records drop constraint if exists records_collection_known;
 alter table public.records add constraint records_collection_known
-  check (collection in ('entries', 'checks', 'dailyGoals', 'longGoals', 'petProfiles', 'petCommands', 'petWalks', 'trainingProgress'));
+  check (collection ~ '^[a-zA-Z]{1,40}$');
 
 alter table public.records drop constraint if exists records_id_length;
 alter table public.records add constraint records_id_length

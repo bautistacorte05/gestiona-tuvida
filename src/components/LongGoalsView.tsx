@@ -35,7 +35,7 @@ export default function LongGoalsView() {
             </View>
           </View>
           <Pressable onPress={() => setEditing('new')} className="rounded-lg bg-shu-500 px-4 py-2.5">
-            <Text className="font-medium text-ink-100">+ Nueva meta</Text>
+            <Text className="font-medium text-washi">+ Nueva meta</Text>
           </Pressable>
         </View>
 

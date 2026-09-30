@@ -8,6 +8,7 @@ import { DAILY_CATEGORIES } from '../../config/categories';
 import { useDb, type Check, type Entry } from '../../lib/db';
 import { formatMonth, monthKey, monthRange, shiftMonth, today } from '../../lib/dates';
 import { pctChange } from '../../lib/prices';
+import { useThemeColors } from '../../lib/theme';
 import { CHART_CATEGORIES, formatMinutes, minutesByDay } from '../../lib/time';
 
 const WEEKDAYS = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
@@ -32,11 +33,12 @@ function useMonthTime(allChecks: Check[], allEntries: Entry[], month: string, un
       }
     const total = [...byCat.values()].reduce((a, b) => a + b, 0);
     return { byDay, byCat, daysByCat, total, checks };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [allChecks, allEntries, start, end]);
 }
 
 export default function MesScreen() {
+  const c = useThemeColors();
   const [month, setMonth] = useState(() => monthKey(today()));
   const allChecks = useDb((s) => s.checks);
   const allEntries = useDb((s) => s.entries);
@@ -54,7 +56,8 @@ export default function MesScreen() {
   const totalDaily = DAILY_CATEGORIES.length;
   const ticks = Array.from({ length: days }, (_, i) => {
     const d = `${month}-${String(i + 1).padStart(2, '0')}`;
-    return cur.checks.filter((c) => c.date === d).length;
+    // Solo actividades (no metas diarias ni tareas, que también guardan su tilde en checks).
+    return cur.checks.filter((c) => c.date === d && isDaily(c.categoryId)).length;
   });
   const [y, m] = month.split('-').map(Number);
   const offset = (new Date(y, m - 1, 1).getDay() + 6) % 7;
@@ -168,11 +171,11 @@ export default function MesScreen() {
                   borderRadius: 6,
                   alignItems: 'center',
                   justifyContent: 'center',
-                  backgroundColor: n ? `rgba(191,59,46,${0.15 + (n / totalDaily) * 0.75})` : 'rgba(42,33,24,0.6)',
+                  backgroundColor: n ? `rgba(191,59,46,${0.15 + (n / totalDaily) * 0.75})` : `${c['ink-800']}99`,
                   borderWidth: todayDay === i + 1 ? 2 : 0,
-                  borderColor: '#c9a860',
+                  borderColor: c['gold-400'],
                 }}>
-                <Text style={{ fontSize: 11, color: n / totalDaily > 0.6 ? '#16120f' : '#ede3d3' }}>{i + 1}</Text>
+                <Text style={{ fontSize: 11, color: n / totalDaily > 0.6 ? '#16120f' : c['ink-100'] }}>{i + 1}</Text>
               </View>
             ))}
           </View>

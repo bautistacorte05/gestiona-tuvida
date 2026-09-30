@@ -3,6 +3,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Card, Empty, EntryRow } from '../../components/common';
+import DayPlan from '../../components/DayPlan';
 import EntryForm from '../../components/EntryForm';
 import MinutesSheet from '../../components/MinutesSheet';
 import { DayStack } from '../../components/TimeCharts';
@@ -22,6 +23,7 @@ export default function HoyScreen() {
 
   const allEntries = useDb((s) => s.entries);
   const allChecks = useDb((s) => s.checks);
+  const nombre = useDb((s) => s.userProfile[0]?.nombre);
 
   const entries = useMemo(
     () => allEntries.filter((e) => e.date === date && DAILY_CATEGORIES.some((c) => c.id === e.categoryId)).sort((a, b) => a.createdAt - b.createdAt),
@@ -58,12 +60,14 @@ export default function HoyScreen() {
 
         {isToday && (
           <View className="flex-row items-center justify-between">
-            <Text className="text-xl font-bold text-ink-100">{greeting()} 👋</Text>
+            <Text className="text-xl font-bold text-ink-100">{greeting()}{nombre ? `, ${nombre}` : ''} 👋</Text>
             <Text className="text-sm font-medium text-ink-400">
               {doneCount}/{DAILY_CATEGORIES.length} · {Math.round((doneCount / DAILY_CATEGORIES.length) * 100)}%
             </Text>
           </View>
         )}
+
+        <DayPlan date={date} />
 
         <View>
           {!isToday && (

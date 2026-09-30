@@ -110,7 +110,7 @@ export default function LongGoalForm({ goal, onClose }: { goal?: LongGoal; onClo
               </Pressable>
             )}
             <Pressable onPress={submit} className="flex-1 items-center justify-center rounded-lg bg-shu-500 py-2.5">
-              <Text className="font-medium text-ink-100">Guardar</Text>
+              <Text className="font-medium text-washi">Guardar</Text>
             </Pressable>
           </View>
         </Pressable>

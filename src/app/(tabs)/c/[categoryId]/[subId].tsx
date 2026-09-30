@@ -1,19 +1,26 @@
 import { useLocalSearchParams } from 'expo-router';
+import { Fragment, type ReactNode } from 'react';
 import { Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import DailyGoalsView from '../../../components/DailyGoalsView';
-import FinanceHomeView from '../../../components/FinanceHomeView';
-import LongGoalsView from '../../../components/LongGoalsView';
-import PetLostView from '../../../components/PetLostView';
-import PetProfileView from '../../../components/PetProfileView';
-import PetTrainingView from '../../../components/PetTrainingView';
-import PetWalkLiveView from '../../../components/PetWalkLiveView';
-import SubView from '../../../components/SubView';
-import { findSub } from '../../../config/categories';
+import DailyGoalsView from '../../../../components/DailyGoalsView';
+import FinanceHomeView from '../../../../components/FinanceHomeView';
+import LongGoalsView from '../../../../components/LongGoalsView';
+import PetLostView from '../../../../components/PetLostView';
+import PetProfileView from '../../../../components/PetProfileView';
+import PetTrainingView from '../../../../components/PetTrainingView';
+import PetWalkLiveView from '../../../../components/PetWalkLiveView';
+import SubView from '../../../../components/SubView';
+import { findSub } from '../../../../config/categories';
 
 export default function SubRoute() {
   const { categoryId, subId } = useLocalSearchParams<{ categoryId: string; subId: string }>();
+  // Dentro del menú lateral, pasar de una categoría a otra reutiliza esta pantalla con otros
+  // parámetros: la key la reinicia para que no quede estado de la anterior (formularios, mes…).
+  return <Fragment key={`${categoryId}/${subId}`}>{renderSub(categoryId, subId)}</Fragment>;
+}
+
+function renderSub(categoryId: string, subId: string): ReactNode {
   const found = findSub(categoryId, subId);
 
   if (!found) {

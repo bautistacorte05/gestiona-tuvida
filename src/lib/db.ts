@@ -96,6 +96,48 @@ export interface PetWalk {
   createdAt: number
 }
 
+/** Tarea suelta de un día (Hoy → Plan del día). */
+export interface DayTask {
+  id: string
+  /** YYYY-MM-DD */
+  date: string
+  title: string
+  /** HH:MM (opcional) */
+  time?: string
+  done?: boolean
+  /** Descartada desde "Pendientes de días anteriores": deja de arrastrarse. */
+  dismissed?: boolean
+  createdAt: number
+  updatedAt: number
+}
+
+/** Tarea fija que se repite ciertos días. El tilde de cada día va en `checks` con categoryId `task:<id>`. */
+export interface FixedTask {
+  id: string
+  title: string
+  time?: string
+  /** Días de la semana en que aparece: 0 = domingo … 6 = sábado. */
+  weekdays: number[]
+  createdAt: number
+  updatedAt: number
+  /** Desde cuándo dejó de repetirse (ms). Antes de esa fecha sigue apareciendo en los días pasados. */
+  archivedAt?: number
+}
+
+/** Perfil de la persona dueña de la cuenta (Ajustes → Perfil). Es una lista de un solo elemento (id 'me') para sincronizarse como el resto. */
+export interface UserProfile {
+  id: 'me'
+  nombre?: string
+  apellido?: string
+  /** YYYY-MM-DD */
+  nacimiento?: string
+  telefono?: string
+  ciudad?: string
+  /** data URI JPEG liviano, como la foto de la mascota. */
+  fotoUri?: string
+  updatedAt: number
+}
+
 /** Paso del plan de adiestramiento (config/training.ts) marcado como hecho para una mascota. */
 export interface TrainingStepDone {
   id: string // `${petId}|${stepId}`
@@ -105,7 +147,19 @@ export interface TrainingStepDone {
 }
 
 /** Colecciones que se sincronizan con la cuenta (cada una es un array de registros con `id`). */
-export const SYNCED_COLLECTIONS = ['entries', 'checks', 'dailyGoals', 'longGoals', 'petProfiles', 'petCommands', 'petWalks', 'trainingProgress'] as const
+export const SYNCED_COLLECTIONS = [
+  'entries',
+  'checks',
+  'dailyGoals',
+  'longGoals',
+  'petProfiles',
+  'petCommands',
+  'petWalks',
+  'trainingProgress',
+  'userProfile',
+  'dayTasks',
+  'fixedTasks',
+] as const
 export type SyncedCollection = (typeof SYNCED_COLLECTIONS)[number]
 
 /**
@@ -139,6 +193,9 @@ interface DbState {
   petCommands: PetCommand[]
   petWalks: PetWalk[]
   trainingProgress: TrainingStepDone[]
+  userProfile: UserProfile[]
+  dayTasks: DayTask[]
+  fixedTasks: FixedTask[]
 }
 
 interface DbActions {
@@ -161,6 +218,12 @@ interface DbActions {
   savePetWalk: (walk: Omit<PetWalk, 'id' | 'createdAt'>) => string
   deletePetWalk: (id: string) => void
   toggleTrainingStep: (petId: string, stepId: string) => void
+  updateUserProfile: (patch: Partial<Omit<UserProfile, 'id' | 'updatedAt'>>) => void
+  addDayTask: (date: string, title: string, time?: string) => void
+  updateDayTask: (id: string, patch: Partial<Pick<DayTask, 'date' | 'done' | 'dismissed' | 'title' | 'time'>>) => void
+  deleteDayTask: (id: string) => void
+  addFixedTask: (title: string, weekdays: number[], time?: string) => void
+  archiveFixedTask: (id: string) => void
   importAll: (json: string) => number
 }
 
@@ -179,6 +242,9 @@ export const useDb = create<DbState & DbActions>()(
       petCommands: [],
       petWalks: [],
       trainingProgress: [],
+      userProfile: [],
+      dayTasks: [],
+      fixedTasks: [],
 
       saveEntry: (entry) => {
         const now = Date.now()
@@ -266,6 +332,23 @@ export const useDb = create<DbState & DbActions>()(
             : { trainingProgress: [...s.trainingProgress, { id, petId, stepId, completedAt: Date.now() }] },
         )
       },
+
+      updateUserProfile: (patch) =>
+        set((s) => ({ userProfile: [{ ...s.userProfile[0], ...patch, id: 'me', updatedAt: Date.now() }] })),
+
+      addDayTask: (date, title, time) => {
+        const now = Date.now()
+        set((s) => ({ dayTasks: [...s.dayTasks, { id: uuid(), date, title: title.trim(), time: time || undefined, createdAt: now, updatedAt: now }] }))
+      },
+      updateDayTask: (id, patch) =>
+        set((s) => ({ dayTasks: s.dayTasks.map((t) => (t.id === id ? { ...t, ...patch, updatedAt: Date.now() } : t)) })),
+      deleteDayTask: (id) => set((s) => ({ dayTasks: s.dayTasks.filter((t) => t.id !== id) })),
+      addFixedTask: (title, weekdays, time) => {
+        const now = Date.now()
+        set((s) => ({ fixedTasks: [...s.fixedTasks, { id: uuid(), title: title.trim(), weekdays, time: time || undefined, createdAt: now, updatedAt: now }] }))
+      },
+      archiveFixedTask: (id) =>
+        set((s) => ({ fixedTasks: s.fixedTasks.map((t) => (t.id === id ? { ...t, archivedAt: Date.now(), updatedAt: Date.now() } : t)) })),
 
       importAll: (json) => {
         const data = JSON.parse(json)

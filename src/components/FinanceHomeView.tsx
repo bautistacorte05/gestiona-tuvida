@@ -85,7 +85,7 @@ export default function FinanceHomeView() {
               <Text className="font-medium text-shu-300">− Gasto</Text>
             </Pressable>
             <Pressable onPress={() => setEditing({ ...foundIngresos })} className="flex-1 items-center justify-center rounded-lg bg-moss-500 py-2.5">
-              <Text className="font-medium text-ink-100">+ Ingreso</Text>
+              <Text className="font-medium text-washi">+ Ingreso</Text>
             </Pressable>
           </View>
         </View>

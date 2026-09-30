@@ -8,6 +8,7 @@
     "scheme": "gestionsqualimobile",
     "userInterfaceStyle": "automatic",
     "ios": {
+      "bundleIdentifier": "com.squali.gestionatuvida",
       "icon": "./assets/expo.icon",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Usamos tu ubicación para dibujar el recorrido del paseo en el mapa.",
@@ -18,6 +19,7 @@
       }
     },
     "android": {
+      "package": "com.squali.gestionatuvida",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -44,7 +46,10 @@
         "expo-location",
         {
           "locationWhenInUsePermission": "Usamos tu ubicación para dibujar el recorrido del paseo en el mapa.",
-          "isAndroidBackgroundLocationEnabled": true
+          "locationAlwaysAndWhenInUsePermission": "Usamos tu ubicación para seguir el recorrido del paseo, incluso con la pantalla bloqueada.",
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true,
+          "isIosBackgroundLocationEnabled": true
         }
       ],
       "expo-sharing",

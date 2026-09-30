@@ -84,7 +84,7 @@ export default function PetTrainingView() {
                 onChangeText={setNombre}
               />
               <Pressable onPress={add} disabled={!nombre.trim()} className={`shrink-0 items-center justify-center rounded-lg bg-shu-500 px-4 py-2.5 ${!nombre.trim() ? 'opacity-50' : ''}`}>
-                <Text className="font-medium text-ink-100">+ Agregar</Text>
+                <Text className="font-medium text-washi">+ Agregar</Text>
               </Pressable>
             </View>
 

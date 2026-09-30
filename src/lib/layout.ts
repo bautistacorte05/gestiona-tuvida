@@ -12,14 +12,14 @@ const useIsClient = () =>
     () => false,
   );
 
-// Barras de desplazamiento finas y oscuras en la PC (las del navegador son claras y desentonan).
+// Barras de desplazamiento finas y del color del modo actual en la PC (las del navegador desentonan).
 // Se inyecta solo en web: en el celular no existen y NativeWind no entiende estos selectores.
 const SCROLLBAR_CSS = `
-* { scrollbar-width: thin; scrollbar-color: #35291f transparent; }
+* { scrollbar-width: thin; scrollbar-color: rgb(var(--ink-700)) transparent; }
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #35291f; border-radius: 8px; }
-::-webkit-scrollbar-thumb:hover { background: #4a3a2c; }
+::-webkit-scrollbar-thumb { background: rgb(var(--ink-700)); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: rgb(var(--ink-600)); }
 `;
 if (Platform.OS === 'web' && typeof document !== 'undefined' && !document.getElementById('app-scrollbars')) {
   const style = document.createElement('style');

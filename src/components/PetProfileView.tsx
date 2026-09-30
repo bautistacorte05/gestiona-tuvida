@@ -175,7 +175,7 @@ function PetProfileForm({ profile }: { profile?: PetProfile }) {
             </Pressable>
           )}
           <Pressable onPress={save} className="flex-1 items-center justify-center rounded-lg bg-shu-500 py-2.5">
-            <Text className="font-medium text-ink-100">Guardar</Text>
+            <Text className="font-medium text-washi">Guardar</Text>
           </Pressable>
         </View>
       </View>
@@ -209,7 +209,7 @@ function PetProfileForm({ profile }: { profile?: PetProfile }) {
           <Text className="text-ink-300">Editar</Text>
         </Pressable>
         <Pressable onPress={share} disabled={busy} className="flex-1 items-center justify-center rounded-lg bg-shu-500 py-2.5">
-          <Text className="font-medium text-ink-100">Compartir</Text>
+          <Text className="font-medium text-washi">Compartir</Text>
         </Pressable>
       </View>
       <Pressable onPress={removePet} className="items-center py-1">

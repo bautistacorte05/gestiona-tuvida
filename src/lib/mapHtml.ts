@@ -36,9 +36,14 @@ export const MAP_HTML = `<!doctype html>
           line.setLatLngs([]);
           if (startMarker) { map.removeLayer(startMarker); startMarker = null; }
         } else if (msg.type === 'path') {
+          // Recorrido completo (al volver a la pantalla): reemplaza lo dibujado, con su punto de inicio.
           var latlngs = msg.points.map(function (p) { return [p.lat, p.lng]; });
           line.setLatLngs(latlngs);
-          if (latlngs.length) map.fitBounds(line.getBounds(), { padding: [30, 30] });
+          if (startMarker) { map.removeLayer(startMarker); startMarker = null; }
+          if (latlngs.length) {
+            startMarker = L.circleMarker(latlngs[0], { radius: 7, color: '#b8934b', weight: 3, fillColor: '#16120f', fillOpacity: 1 }).addTo(map);
+            map.fitBounds(line.getBounds(), { padding: [30, 30], maxZoom: 17 });
+          }
         }
       } catch (e) {}
     }
