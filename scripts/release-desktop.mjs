@@ -41,7 +41,14 @@ run('npm run desktop:deps');
 
 if (!existing) run(`gh release create ${tag} --repo ${fullRepo} --draft --title ${version} --notes "Gestiona tu vida ${version}"`);
 
-run('npx electron-builder --win --publish always', { GH_TOKEN: token });
+// A veces la primera corrida falla porque otro programa (ej. el antivirus) está revisando los
+// archivos recién generados; la segunda anda. Se reintenta una vez sola antes de rendirse.
+try {
+  run('npx electron-builder --win --publish always', { GH_TOKEN: token });
+} catch {
+  console.warn('\nEl empaquetado falló; reintentando una vez…\n');
+  run('npx electron-builder --win --publish always', { GH_TOKEN: token });
+}
 
 const uploaded = (existingRelease()?.assets ?? []).map((a) => a.name);
 const missing = expected.filter((name) => !uploaded.includes(name));
