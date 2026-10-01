@@ -22,6 +22,26 @@ export function shiftDay(iso: string, delta: number) {
   return toISO(new Date(y, m - 1, d + delta))
 }
 
+/** Lunes de la semana (lunes a domingo) que contiene la fecha. */
+export function weekStart(iso: string) {
+  const [y, m, d] = iso.split('-').map(Number)
+  const dow = (new Date(y, m - 1, d).getDay() + 6) % 7 // 0 = lunes … 6 = domingo
+  return shiftDay(iso, -dow)
+}
+
+/** Semana de lunes a domingo que contiene la fecha. */
+export function weekRange(iso: string) {
+  const start = weekStart(iso)
+  return { start, end: shiftDay(start, 6), days: 7 }
+}
+
+/** Días entre dos fechas (b - a). */
+export function daysBetween(a: string, b: string) {
+  const [ay, am, ad] = a.split('-').map(Number)
+  const [by, bm, bd] = b.split('-').map(Number)
+  return Math.round((new Date(by, bm - 1, bd).getTime() - new Date(ay, am - 1, ad).getTime()) / 86400000)
+}
+
 /** Días entre hoy y una fecha: negativo si ya pasó. */
 export function daysUntil(iso: string) {
   const [y, m, d] = iso.split('-').map(Number)

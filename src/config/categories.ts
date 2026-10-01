@@ -32,6 +32,8 @@ export interface Subcategory {
   itemized?: boolean
   /** Movimientos de ahorro en más de una moneda: usa su propio resumen (ver SavingsInsights). */
   savings?: boolean
+  /** Permite ver los registros por día, semana o mes (en vez de solo por mes). */
+  periods?: boolean
   /** Pantalla propia en vez del formulario genérico (ver App.tsx). */
   custom?: 'finance-home' | 'daily-goals' | 'long-goals' | 'pet-profile' | 'pet-lost' | 'pet-training' | 'pet-walk-live'
 }
@@ -84,6 +86,7 @@ export const CATEGORIES: Category[] = [
         id: 'ingresos',
         name: 'Ingresos',
         icon: '💵',
+        periods: true,
         fields: [
           { key: 'monto', label: 'Monto', type: 'number', unit: '$', money: true, required: true, aggregate: 'sum' },
           { key: 'fuente', label: 'Fuente', type: 'select', multi: true, options: ['Sueldo', 'Extra', 'Venta', 'Regalo', 'Otros'] },
