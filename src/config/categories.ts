@@ -32,6 +32,8 @@ export interface Subcategory {
   itemized?: boolean
   /** Movimientos de ahorro en más de una moneda: usa su propio resumen (ver SavingsInsights). */
   savings?: boolean
+  /** No aparece en los menús (la pantalla sigue existiendo; se llega desde otra, ej. Paseos → En vivo). */
+  hidden?: boolean
   /** Pantalla propia en vez del formulario genérico (ver App.tsx). */
   custom?: 'finance-home' | 'daily-goals' | 'long-goals' | 'pet-profile' | 'pet-lost' | 'pet-training' | 'pet-walk-live'
 }

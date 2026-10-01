@@ -124,6 +124,13 @@ export interface FixedTask {
   archivedAt?: number
 }
 
+/** Nombre elegido por el usuario para una categoría (id = 'futbol') o subcategoría (id = 'futbol/partidos'). */
+export interface CustomName {
+  id: string
+  name: string
+  updatedAt: number
+}
+
 /** Perfil de la persona dueña de la cuenta (Ajustes → Perfil). Es una lista de un solo elemento (id 'me') para sincronizarse como el resto. */
 export interface UserProfile {
   id: 'me'
@@ -159,6 +166,7 @@ export const SYNCED_COLLECTIONS = [
   'userProfile',
   'dayTasks',
   'fixedTasks',
+  'customNames',
 ] as const
 export type SyncedCollection = (typeof SYNCED_COLLECTIONS)[number]
 
@@ -198,6 +206,7 @@ interface DbState {
   userProfile: UserProfile[]
   dayTasks: DayTask[]
   fixedTasks: FixedTask[]
+  customNames: CustomName[]
 }
 
 interface DbActions {
@@ -226,6 +235,8 @@ interface DbActions {
   deleteDayTask: (id: string) => void
   addFixedTask: (title: string, weekdays: number[], time?: string) => void
   archiveFixedTask: (id: string) => void
+  /** Nombre vacío = volver al nombre original. */
+  setCustomName: (id: string, name: string) => void
   importAll: (json: string) => number
 }
 
@@ -247,6 +258,7 @@ export const useDb = create<DbState & DbActions>()(
       userProfile: [],
       dayTasks: [],
       fixedTasks: [],
+      customNames: [],
 
       saveEntry: (entry) => {
         const now = Date.now()
@@ -351,6 +363,13 @@ export const useDb = create<DbState & DbActions>()(
       },
       archiveFixedTask: (id) =>
         set((s) => ({ fixedTasks: s.fixedTasks.map((t) => (t.id === id ? { ...t, archivedAt: Date.now(), updatedAt: Date.now() } : t)) })),
+
+      setCustomName: (id, name) =>
+        set((s) => {
+          const rest = s.customNames.filter((n) => n.id !== id)
+          const clean = name.trim()
+          return { customNames: clean ? [...rest, { id, name: clean, updatedAt: Date.now() }] : rest }
+        }),
 
       importAll: (json) => {
         const data = JSON.parse(json)

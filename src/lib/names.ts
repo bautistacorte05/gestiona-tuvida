@@ -1,0 +1,37 @@
+import { useMemo } from 'react';
+
+import { CATEGORIES, type Category, type Subcategory } from '../config/categories';
+import { useDb } from './db';
+
+/** Ids de los nombres personalizados: 'futbol' para la categoría, 'futbol/partidos' para la subcategoría. */
+export const nameIdOf = (categoryId: string, subId?: string) => (subId ? `${categoryId}/${subId}` : categoryId);
+
+function applyNames(names: Map<string, string>): Category[] {
+  return CATEGORIES.map((cat) => ({
+    ...cat,
+    name: names.get(nameIdOf(cat.id)) ?? cat.name,
+    subcategories: cat.subcategories.map((sub) => ({ ...sub, name: names.get(nameIdOf(cat.id, sub.id)) ?? sub.name })),
+  }));
+}
+
+/** Todas las categorías con los nombres que eligió el usuario (incluye subcategorías ocultas). */
+export function useCategories(): Category[] {
+  const customNames = useDb((s) => s.customNames);
+  return useMemo(() => applyNames(new Map(customNames.map((n) => [n.id, n.name]))), [customNames]);
+}
+
+/** Categorías para mostrar en los menús: con nombres personalizados y sin subcategorías `hidden`. */
+export function useMenuCategories(): Category[] {
+  const categories = useCategories();
+  return useMemo(() => categories.map((cat) => ({ ...cat, subcategories: cat.subcategories.filter((s) => !s.hidden) })), [categories]);
+}
+
+/** Categoría + subcategoría con nombres personalizados (o undefined si no existe). */
+export function useFindSub(categoryId: string, subId: string): { category: Category; sub: Subcategory } | undefined {
+  const categories = useCategories();
+  return useMemo(() => {
+    const category = categories.find((c) => c.id === categoryId);
+    const sub = category?.subcategories.find((s) => s.id === subId);
+    return category && sub ? { category, sub } : undefined;
+  }, [categories, categoryId, subId]);
+}

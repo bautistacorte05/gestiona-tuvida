@@ -303,6 +303,7 @@ function clearLocalData() {
       userProfile: [],
       dayTasks: [],
       fixedTasks: [],
+      customNames: [],
       sync: { pending: {}, stamps: {}, tombstones: {} },
     }),
   );
