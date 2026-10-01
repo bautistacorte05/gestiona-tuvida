@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { CATEGORIES, type Category, type Subcategory } from '../config/categories';
 import { useDb } from './db';
@@ -18,6 +18,12 @@ function applyNames(names: Map<string, string>): Category[] {
 export function useCategories(): Category[] {
   const customNames = useDb((s) => s.customNames);
   return useMemo(() => applyNames(new Map(customNames.map((n) => [n.id, n.name]))), [customNames]);
+}
+
+/** Función para mostrar el nombre (personalizado) de una categoría por su id. */
+export function useCategoryName() {
+  const categories = useCategories();
+  return useCallback((categoryId: string, fallback: string) => categories.find((c) => c.id === categoryId)?.name ?? fallback, [categories]);
 }
 
 /** Categorías para mostrar en los menús: con nombres personalizados y sin subcategorías `hidden`. */

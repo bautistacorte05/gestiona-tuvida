@@ -7,6 +7,7 @@ import { today } from '../lib/dates';
 import { Empty } from './common';
 import LongGoalForm from './LongGoalForm';
 import BackButton from './BackButton';
+import ScreenTitle from './ScreenTitle';
 
 const num = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 });
 const fmt = (n: number, unit: string) => (unit === '$' ? `$${num.format(n)}` : unit === 'USD' ? `US$${num.format(n)}` : `${num.format(n)} ${unit}`.trim());
@@ -29,10 +30,7 @@ export default function LongGoalsView() {
         <View className="flex-row flex-wrap items-center justify-between gap-3">
           <View className="flex-row items-center gap-2">
             <BackButton />
-            <View>
-              <Text className="text-sm text-violet-400">🎯 Metas</Text>
-              <Text className="text-2xl font-bold text-ink-100">Largo plazo</Text>
-            </View>
+            <ScreenTitle categoryId="metas" subId="largoplazo" />
           </View>
           <Pressable onPress={() => setEditing('new')} className="rounded-lg bg-shu-500 px-4 py-2.5">
             <Text className="font-medium text-washi">+ Nueva meta</Text>

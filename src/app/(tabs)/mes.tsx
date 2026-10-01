@@ -7,6 +7,7 @@ import { Legend, MonthStack } from '../../components/TimeCharts';
 import { DAILY_CATEGORIES } from '../../config/categories';
 import { useDb, type Check, type Entry } from '../../lib/db';
 import { formatMonth, monthKey, monthRange, shiftMonth, today } from '../../lib/dates';
+import { useCategoryName } from '../../lib/names';
 import { pctChange } from '../../lib/prices';
 import { useThemeColors } from '../../lib/theme';
 import { CHART_CATEGORIES, formatMinutes, minutesByDay } from '../../lib/time';
@@ -38,6 +39,7 @@ function useMonthTime(allChecks: Check[], allEntries: Entry[], month: string, un
 }
 
 export default function MesScreen() {
+  const nameOf = useCategoryName();
   const c = useThemeColors();
   const [month, setMonth] = useState(() => monthKey(today()));
   const allChecks = useDb((s) => s.checks);
@@ -100,7 +102,7 @@ export default function MesScreen() {
             {elapsed ? <Text className="text-xs text-ink-500">sobre {elapsed} días</Text> : null}
           </Kpi>
           <Kpi label="Días con tiempo cargado" value={`${activeDays} / ${days}`} />
-          <Kpi label="Donde más tiempo" value={top ? `${top.icon} ${top.name}` : '—'}>
+          <Kpi label="Donde más tiempo" value={top ? `${top.icon} ${nameOf(top.id, top.name)}` : '—'}>
             {top ? <Text className="text-xs text-ink-500">{formatMinutes(cur.byCat.get(top.id)!)}</Text> : null}
           </Kpi>
         </View>
@@ -117,7 +119,7 @@ export default function MesScreen() {
                     <View className="flex-row items-center gap-2">
                       <View className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: r.c.chart }} />
                       <Text className="text-sm text-ink-100">
-                        {r.c.icon} {r.c.name}
+                        {r.c.icon} {nameOf(r.c.id, r.c.name)}
                       </Text>
                     </View>
                     <Text className="text-sm text-ink-100">

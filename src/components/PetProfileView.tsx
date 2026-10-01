@@ -11,6 +11,7 @@ import { pickAndResizeImage } from '../lib/image';
 import DateField from './DateField';
 import PetSwitcher from './PetSwitcher';
 import BackButton from './BackButton';
+import ScreenTitle from './ScreenTitle';
 
 /** Perfil de la mascota activa (foto, raza, nacimiento, teléfono) y su tarjeta tipo DNI para compartir. */
 export default function PetProfileView() {
@@ -26,10 +27,7 @@ export default function PetProfileView() {
       <ScrollView className="flex-1 px-4" contentContainerClassName="gap-5 pb-10 pt-4">
         <View className="flex-row items-center gap-2">
           <BackButton />
-          <View>
-            <Text className="text-sm text-pink-400">🐾 Mascota</Text>
-            <Text className="text-2xl font-bold text-ink-100">Perfil / DNI</Text>
-          </View>
+          <ScreenTitle categoryId="mascota" subId="perfil" />
         </View>
 
         <PetSwitcher onAdd={onAddPet} />

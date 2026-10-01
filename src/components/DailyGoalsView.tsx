@@ -7,6 +7,7 @@ import { formatDay, shiftDay, today } from '../lib/dates';
 import { computeStreak } from '../lib/streak';
 import { Empty, Stepper } from './common';
 import BackButton from './BackButton';
+import ScreenTitle from './ScreenTitle';
 
 const goalCatId = (id: string) => `goal:${id}`;
 
@@ -42,10 +43,7 @@ export default function DailyGoalsView() {
         <View className="flex-row flex-wrap items-center justify-between gap-3">
           <View className="flex-row items-center gap-2">
             <BackButton />
-            <View>
-              <Text className="text-sm text-violet-400">🎯 Metas</Text>
-              <Text className="text-2xl font-bold text-ink-100">Diarias</Text>
-            </View>
+            <ScreenTitle categoryId="metas" subId="diarias" />
           </View>
           <Stepper label={isToday ? 'Hoy' : formatDay(date, { day: 'numeric', month: 'short' })} onPrev={() => setDate(shiftDay(date, -1))} onNext={() => setDate(shiftDay(date, 1))} />
         </View>

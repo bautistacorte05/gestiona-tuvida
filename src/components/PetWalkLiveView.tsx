@@ -12,6 +12,7 @@ import { useThemeColors, type ThemeColors } from '../lib/theme';
 import { finishWalk, isWalkInterrupted, requestLocationPermission, resumeWalk, startWalk, supportsBackground, useLiveWalk } from '../lib/walkTracker';
 import BackButton from './BackButton';
 import PetSwitcher from './PetSwitcher';
+import ScreenTitle from './ScreenTitle';
 
 // Colores fijos (iguales en modo claro y oscuro): el botón rojo y su texto. El resto sale del tema.
 const COLORS = {
@@ -41,10 +42,7 @@ function PetWalkWebNotice() {
     <SafeAreaView style={styles.safe}>
       <View style={styles.headerRow}>
         <BackButton />
-        <View style={styles.header}>
-          <Text style={styles.eyebrow}>🐾 Mascota</Text>
-          <Text style={styles.title}>🛰️ Paseo en vivo</Text>
-        </View>
+        <ScreenTitle categoryId="mascota" subId="paseo-vivo" />
       </View>
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 24 }}>
         <Text style={{ fontSize: 40 }}>📵</Text>
@@ -166,10 +164,7 @@ function PetWalkLiveViewNative() {
     <SafeAreaView style={styles.safe}>
       <View style={styles.headerRow}>
         <BackButton />
-        <View style={styles.header}>
-          <Text style={styles.eyebrow}>🐾 Mascota</Text>
-          <Text style={styles.title}>🛰️ Paseo en vivo</Text>
-        </View>
+        <ScreenTitle categoryId="mascota" subId="paseo-vivo" />
       </View>
 
       {!walk.active && hasPets && <PetSwitcher onAdd={() => addPetProfile({ nombre: '' })} />}

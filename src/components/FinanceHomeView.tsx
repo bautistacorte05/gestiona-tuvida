@@ -10,6 +10,7 @@ import { netByCurrency } from '../lib/savings';
 import { formatCurrency } from '../lib/stats';
 import EntryForm from './EntryForm';
 import BackButton from './BackButton';
+import ScreenTitle from './ScreenTitle';
 
 type Editing = { category: Category; sub: Subcategory; entry?: Entry };
 
@@ -67,10 +68,7 @@ export default function FinanceHomeView() {
       <ScrollView className="flex-1 px-4" contentContainerClassName="gap-5 pb-10 pt-4">
         <View className="flex-row items-center gap-2">
           <BackButton />
-          <View>
-            <Text className="text-sm text-emerald-400">💰 Finanzas</Text>
-            <Text className="text-2xl font-bold text-ink-100">Balance</Text>
-          </View>
+          <ScreenTitle categoryId="finanzas" subId="balance" />
         </View>
 
         <View className="rounded-xl border border-ink-800 border-l-4 border-l-shu-500 bg-ink-900/60 p-4">

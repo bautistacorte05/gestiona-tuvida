@@ -13,6 +13,7 @@ import ExpenseInsights from './ExpenseInsights';
 import PetSwitcher from './PetSwitcher';
 import SavingsInsights from './SavingsInsights';
 import BackButton from './BackButton';
+import ScreenTitle from './ScreenTitle';
 
 export default function SubView({ category, sub }: { category: Category; sub: Subcategory }) {
   const [month, setMonth] = useState(() => monthKey(today()));
@@ -91,14 +92,7 @@ export default function SubView({ category, sub }: { category: Category; sub: Su
         <View className="flex-row items-center justify-between gap-3">
           <View className="flex-row items-center gap-2">
             <BackButton />
-            <View>
-              <Text className={`text-sm ${colors.text}`}>
-                {category.icon} {category.name}
-              </Text>
-              <Text className="text-2xl font-bold text-ink-100">
-                {sub.icon} {sub.name}
-              </Text>
-            </View>
+            <ScreenTitle categoryId={category.id} subId={sub.id} />
           </View>
         </View>
 

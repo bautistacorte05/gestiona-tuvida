@@ -2,9 +2,10 @@ import { usePathname } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
-import { CATEGORIES, COLOR_CLASSES } from '../config/categories';
+import { COLOR_CLASSES } from '../config/categories';
 import { useAuth } from '../lib/auth';
 import { useDb } from '../lib/db';
+import { useMenuCategories } from '../lib/names';
 import Avatar from './Avatar';
 
 function NavLink({ icon, label, active, onPress }: { icon: string; label: string; active: boolean; onPress: () => void }) {
@@ -31,6 +32,7 @@ export default function NavMenu({ onNavigate }: { onNavigate: (href: string) => 
   const email = session?.user.email ?? '';
   const fullName = [profile?.nombre, profile?.apellido].filter(Boolean).join(' ');
   const inSettings = pathname === '/ajustes';
+  const categories = useMenuCategories();
 
   return (
     <View>
@@ -52,7 +54,7 @@ export default function NavMenu({ onNavigate }: { onNavigate: (href: string) => 
 
       <View className="mx-4 my-2 h-px bg-ink-800" />
 
-      {CATEGORIES.map((cat) => {
+      {categories.map((cat) => {
         const isOpen = toggled[cat.id] ?? cat.id === currentCat;
         const colors = COLOR_CLASSES[cat.color];
         return (

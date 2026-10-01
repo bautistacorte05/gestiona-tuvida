@@ -10,6 +10,7 @@ import { DayStack } from '../../components/TimeCharts';
 import { COLOR_CLASSES, DAILY_CATEGORIES, findSub, type Category, type Subcategory } from '../../config/categories';
 import { formatDay, shiftDay, today } from '../../lib/dates';
 import { useDb, type Entry } from '../../lib/db';
+import { useCategoryName } from '../../lib/names';
 import { goToSub } from '../../lib/nav';
 import { computeStreak, greeting } from '../../lib/streak';
 import { formatMinutes, minutesByDay } from '../../lib/time';
@@ -17,6 +18,7 @@ import { formatMinutes, minutesByDay } from '../../lib/time';
 type Editing = { category: Category; sub: Subcategory; entry?: Entry };
 
 export default function HoyScreen() {
+  const nameOf = useCategoryName();
   const [date, setDate] = useState(today);
   const [editing, setEditing] = useState<Editing | null>(null);
   const [timing, setTiming] = useState<Category | null>(null);
@@ -99,7 +101,7 @@ export default function HoyScreen() {
                   )}
                   <Pressable onPress={() => useDb.getState().toggleCheck(date, cat.id)} className="flex-1 items-center justify-center gap-0.5 p-2">
                     <Text className="text-2xl">{cat.icon}</Text>
-                    <Text className={`text-sm font-semibold ${checked ? 'text-moss-300' : 'text-ink-200'}`}>{cat.name}</Text>
+                    <Text className={`text-sm font-semibold ${checked ? 'text-moss-300' : 'text-ink-200'}`}>{nameOf(cat.id, cat.name)}</Text>
                   </Pressable>
                   <View className={`flex-row border-t ${checked ? 'border-moss-500/40' : 'border-ink-800/80'}`}>
                     <Pressable onPress={() => setTiming(cat)} className="flex-1 items-center py-1.5">
@@ -134,7 +136,7 @@ export default function HoyScreen() {
                 .map((c) => (
                   <View key={c.id} className="flex-row items-center gap-2">
                     <View className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: c.chart }} />
-                    <Text className="flex-1 text-sm text-ink-300">{c.name}</Text>
+                    <Text className="flex-1 text-sm text-ink-300">{nameOf(c.id, c.name)}</Text>
                     <Text className="text-sm text-ink-400">{Math.round((minutes.get(c.id)! / totalMin) * 100)}%</Text>
                     <Text className="w-24 text-right text-sm text-ink-100">{formatMinutes(minutes.get(c.id)!)}</Text>
                   </View>
@@ -155,7 +157,7 @@ export default function HoyScreen() {
                 return (
                   <View key={cat.id} className="rounded-xl border border-ink-800 bg-ink-900/60 p-2">
                     <Text className={`px-3 pb-1 pt-1 text-xs font-medium ${COLOR_CLASSES[cat.color].text}`}>
-                      {cat.icon} {cat.name}
+                      {cat.icon} {nameOf(cat.id, cat.name)}
                     </Text>
                     {list.map((e) => {
                       const found = findSub(e.categoryId, e.subId);

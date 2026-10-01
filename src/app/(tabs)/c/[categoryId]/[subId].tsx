@@ -11,18 +11,19 @@ import PetProfileView from '../../../../components/PetProfileView';
 import PetTrainingView from '../../../../components/PetTrainingView';
 import PetWalkLiveView from '../../../../components/PetWalkLiveView';
 import SubView from '../../../../components/SubView';
-import { findSub } from '../../../../config/categories';
+import type { Category, Subcategory } from '../../../../config/categories';
+import { useFindSub } from '../../../../lib/names';
 
 export default function SubRoute() {
   const { categoryId, subId } = useLocalSearchParams<{ categoryId: string; subId: string }>();
   // Dentro del menú lateral, pasar de una categoría a otra reutiliza esta pantalla con otros
   // parámetros: la key la reinicia para que no quede estado de la anterior (formularios, mes…).
-  return <Fragment key={`${categoryId}/${subId}`}>{renderSub(categoryId, subId)}</Fragment>;
+  // Con los nombres que eligió el usuario (✏️ en el título de cada pantalla).
+  const found = useFindSub(categoryId, subId);
+  return <Fragment key={`${categoryId}/${subId}`}>{renderSub(found)}</Fragment>;
 }
 
-function renderSub(categoryId: string, subId: string): ReactNode {
-  const found = findSub(categoryId, subId);
-
+function renderSub(found: { category: Category; sub: Subcategory } | undefined): ReactNode {
   if (!found) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-ink-950">

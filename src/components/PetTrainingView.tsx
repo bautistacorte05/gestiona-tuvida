@@ -8,6 +8,7 @@ import { Empty } from './common';
 import PetSwitcher from './PetSwitcher';
 import TrainingPlan from './TrainingPlan';
 import BackButton from './BackButton';
+import ScreenTitle from './ScreenTitle';
 
 const NIVELES = 5;
 
@@ -48,10 +49,7 @@ export default function PetTrainingView() {
       <ScrollView className="flex-1 px-4" contentContainerClassName="gap-5 pb-10 pt-4">
         <View className="flex-row items-center gap-2">
           <BackButton />
-          <View>
-            <Text className="text-sm text-pink-400">🐾 Mascota</Text>
-            <Text className="text-2xl font-bold text-ink-100">🎓 Entrenamiento</Text>
-          </View>
+          <ScreenTitle categoryId="mascota" subId="entrenamiento" />
         </View>
 
         {hasPets && <PetSwitcher onAdd={onAddPet} />}
