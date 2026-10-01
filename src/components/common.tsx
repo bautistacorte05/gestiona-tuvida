@@ -70,7 +70,7 @@ export function EntryRow({ sub, entry, onPress, showSub }: { sub: Subcategory; e
 }
 
 /** Barras por día del mes. `barClass` es una clase Tailwind de fondo, ej: "bg-orange-500". */
-export function DayBars({ values, barClass, highlight }: { values: number[]; barClass: string; highlight?: number }) {
+export function DayBars({ values, barClass, highlight, labels }: { values: number[]; barClass: string; highlight?: number; labels?: string[] }) {
   const max = Math.max(...values, 0);
   return (
     <View>
@@ -84,11 +84,22 @@ export function DayBars({ values, barClass, highlight }: { values: number[]; bar
           </View>
         ))}
       </View>
-      <View className="mt-1 flex-row justify-between">
-        <Text className="text-[10px] text-ink-500">1</Text>
-        <Text className="text-[10px] text-ink-500">{Math.ceil(values.length / 2)}</Text>
-        <Text className="text-[10px] text-ink-500">{values.length}</Text>
-      </View>
+      {labels ? (
+        // Una etiqueta debajo de cada barra (ej: L M X J V S D).
+        <View className="mt-1 flex-row gap-[2px]">
+          {labels.map((l, i) => (
+            <Text key={i} className="flex-1 text-center text-[10px] text-ink-500">
+              {l}
+            </Text>
+          ))}
+        </View>
+      ) : (
+        <View className="mt-1 flex-row justify-between">
+          <Text className="text-[10px] text-ink-500">1</Text>
+          <Text className="text-[10px] text-ink-500">{Math.ceil(values.length / 2)}</Text>
+          <Text className="text-[10px] text-ink-500">{values.length}</Text>
+        </View>
+      )}
     </View>
   );
 }

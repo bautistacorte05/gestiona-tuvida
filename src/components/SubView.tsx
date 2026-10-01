@@ -4,12 +4,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { COLOR_CLASSES, type Category, type Field, type Subcategory } from '../config/categories';
 import { PET_OWNED_SUBS, useDb, type Entry } from '../lib/db';
-import { daysUntil, formatDay, formatMonth, monthKey, monthRange, shiftMonth, today } from '../lib/dates';
+import { daysBetween, daysUntil, formatDay, formatMonth, monthKey, monthRange, shiftMonth, today } from '../lib/dates';
 import { goToSub } from '../lib/nav';
 import { breakdown, formatValue, summarize } from '../lib/stats';
 import { Card, DayBars, Empty, EntryRow, Stepper } from './common';
 import EntryForm from './EntryForm';
 import ExpenseInsights from './ExpenseInsights';
+import PeriodPicker, { usePeriod, WEEK_LABELS } from './PeriodPicker';
 import PetSwitcher from './PetSwitcher';
 import SavingsInsights from './SavingsInsights';
 import BackButton from './BackButton';
@@ -19,7 +20,9 @@ export default function SubView({ category, sub }: { category: Category; sub: Su
   const [month, setMonth] = useState(() => monthKey(today()));
   const [editing, setEditing] = useState<Entry | 'new' | null>(null);
   const colors = COLOR_CLASSES[category.color];
-  const { start, end, days } = monthRange(month);
+  // Selector Día / Semana / Mes, solo si la subcategoría lo pide (sub.periods).
+  const period = usePeriod();
+  const { start, end, days } = sub.periods ? period : monthRange(month);
   const isPetOwned = category.id === 'mascota' && PET_OWNED_SUBS.includes(sub.id);
 
   const petProfiles = useDb((s) => s.petProfiles);
@@ -69,11 +72,11 @@ export default function SubView({ category, sub }: { category: Category; sub: Su
   const perDay = useMemo(() => {
     const arr = Array<number>(days).fill(0);
     for (const e of entries) {
-      const d = Number(e.date.slice(8)) - 1;
+      const d = sub.periods ? daysBetween(start, e.date) : Number(e.date.slice(8)) - 1;
       arr[d] += mainField ? Number(e.values[mainField.key]) || 0 : 1;
     }
     return arr;
-  }, [entries, days, mainField]);
+  }, [entries, days, mainField, sub.periods, start]);
 
   const byDay = useMemo(() => {
     const map = new Map<string, Entry[]>();
@@ -109,7 +112,11 @@ export default function SubView({ category, sub }: { category: Category; sub: Su
           </Empty>
         )}
 
-        <Stepper label={formatMonth(month)} onPrev={() => setMonth(shiftMonth(month, -1))} onNext={() => setMonth(shiftMonth(month, 1))} />
+        {sub.periods ? (
+          <PeriodPicker period={period} />
+        ) : (
+          <Stepper label={formatMonth(month)} onPrev={() => setMonth(shiftMonth(month, -1))} onNext={() => setMonth(shiftMonth(month, 1))} />
+        )}
 
         {category.id !== 'finanzas' && moneyField && <Text className="text-xs text-ink-500">💰 {moneyField.label} se descuenta del saldo de Finanzas.</Text>}
 
@@ -119,14 +126,25 @@ export default function SubView({ category, sub }: { category: Category; sub: Su
           <Stat label="Registros" value={String(entries.length)} />
           <Stat label="Días activos" value={`${activeDays} / ${days}`} />
           {metrics.map((m) => (
-            <Stat key={m.field.key} label={m.field.aggregate === 'avg' ? `${m.field.label} (prom.)` : `${m.field.label} del mes`} value={formatValue(m.field, m.value)} />
+            <Stat key={m.field.key} label={m.field.aggregate === 'avg' ? `${m.field.label} (prom.)` : `${m.field.label} ${sub.periods ? period.noun : 'del mes'}`} value={formatValue(m.field, m.value)} />
           ))}
         </View>
 
-        {!sub.savings && (
+        {!sub.savings && !sub.periods && (
           <Card>
             <Text className="mb-3 text-sm text-ink-400">{mainField ? `${mainField.label} por día` : 'Registros por día'}</Text>
             <DayBars values={perDay} barClass={colors.bar} highlight={isCurrentMonth ? Number(today().slice(8)) : undefined} />
+          </Card>
+        )}
+        {!sub.savings && sub.periods && period.kind !== 'day' && (
+          <Card>
+            <Text className="mb-3 text-sm text-ink-400">{mainField ? `${mainField.label} por día` : 'Registros por día'}</Text>
+            <DayBars
+              values={perDay}
+              barClass={colors.bar}
+              highlight={today() >= start && today() <= end ? daysBetween(start, today()) + 1 : undefined}
+              labels={period.kind === 'week' ? WEEK_LABELS : undefined}
+            />
           </Card>
         )}
 
@@ -154,7 +172,7 @@ export default function SubView({ category, sub }: { category: Category; sub: Su
             )}
           </View>
           {byDay.length === 0 ? (
-            <Empty>Sin registros en {formatMonth(month).toLowerCase()}.</Empty>
+            <Empty>{sub.periods ? period.emptyText : `Sin registros en ${formatMonth(month).toLowerCase()}.`}</Empty>
           ) : (
             <View className="gap-3">
               {byDay.map(([date, list]) => (
@@ -171,7 +189,7 @@ export default function SubView({ category, sub }: { category: Category; sub: Su
       </ScrollView>
 
       {editing && (
-        <EntryForm category={category} sub={sub} entry={editing === 'new' ? undefined : editing} defaultDate={isCurrentMonth ? today() : `${month}-01`} onClose={() => setEditing(null)} />
+        <EntryForm category={category} sub={sub} entry={editing === 'new' ? undefined : editing} defaultDate={sub.periods ? period.defaultDate : isCurrentMonth ? today() : `${month}-01`} onClose={() => setEditing(null)} />
       )}
     </SafeAreaView>
   );
