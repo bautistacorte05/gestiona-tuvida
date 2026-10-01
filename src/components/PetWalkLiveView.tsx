@@ -41,7 +41,7 @@ function PetWalkWebNotice() {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.headerRow}>
-        <BackButton />
+        <BackButton to="/c/mascota/paseos" />
         <ScreenTitle categoryId="mascota" subId="paseo-vivo" />
       </View>
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 24 }}>
@@ -163,7 +163,7 @@ function PetWalkLiveViewNative() {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.headerRow}>
-        <BackButton />
+        <BackButton to="/c/mascota/paseos" />
         <ScreenTitle categoryId="mascota" subId="paseo-vivo" />
       </View>
 
