@@ -2,6 +2,7 @@ import { AppState, Platform } from 'react-native';
 import { create } from 'zustand';
 
 import { SYNCED_COLLECTIONS, useDb, type SyncedCollection, type SyncMeta } from './db';
+import { runDataMigrations } from './migrations';
 import { supabase } from './supabase';
 
 type Row = { id: string } & Record<string, unknown>;
@@ -60,6 +61,8 @@ const setSync = (patch: Partial<SyncMeta>) => useDb.setState((s) => ({ sync: { .
 let tracking = false;
 void waitForHydration().then(() => {
   tracking = true;
+  // Con el registro de cambios activo, así lo que reorganiza la migración también se sincroniza.
+  runDataMigrations();
 });
 function untracked(fn: () => void) {
   const was = tracking;
@@ -260,6 +263,8 @@ export function syncNow(): Promise<void> {
         again = false;
         await push();
         await pull();
+        // Lo bajado puede venir de un dispositivo con la versión vieja (ej. registros de Vacunas).
+        runDataMigrations();
       } while (again);
       useSyncStatus.setState({ state: 'idle', lastSyncAt: Date.now() });
     } catch (e) {

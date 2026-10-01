@@ -94,10 +94,10 @@ function ProfileCard() {
         </View>
         <View className="flex-row gap-2">
           <Field label="Nombre">
-            <TextInput className={INPUT} placeholder="Ej: Bautista" placeholderTextColor="#877a61" value={nombre} onChangeText={setNombre} autoComplete="given-name" />
+            <TextInput className={INPUT} placeholder="Ej: Lucía" placeholderTextColor="#877a61" value={nombre} onChangeText={setNombre} autoComplete="given-name" />
           </Field>
           <Field label="Apellido">
-            <TextInput className={INPUT} placeholder="Ej: Corte" placeholderTextColor="#877a61" value={apellido} onChangeText={setApellido} autoComplete="family-name" />
+            <TextInput className={INPUT} placeholder="Ej: Fernández" placeholderTextColor="#877a61" value={apellido} onChangeText={setApellido} autoComplete="family-name" />
           </Field>
         </View>
         <View className="flex-row gap-2">

@@ -5,7 +5,7 @@ import type { TrainingCategory } from '../config/training'
 import type { Item } from './prices'
 
 /** Subcategorías de Mascota cuyos registros pertenecen a una mascota puntual. */
-export const PET_OWNED_SUBS = ['paseos', 'alimento', 'salud', 'peso']
+export const PET_OWNED_SUBS = ['paseos', 'alimento', 'salud']
 
 export interface Entry {
   id: string
@@ -61,6 +61,8 @@ export interface PetProfile {
   fotoUri?: string
   /** Categoría de adiestramiento elegida (define qué plan de pasos se le sugiere). */
   tipoAdiestramiento?: TrainingCategory
+  /** Historial de peso (Perfil/DNI). Antes era la subcategoría "Peso"; lib/migrations.ts trae los registros viejos acá. */
+  pesos?: { date: string; kg: number }[]
   createdAt: number
   updatedAt: number
   archived?: boolean
@@ -223,6 +225,7 @@ interface DbActions {
   updatePetProfile: (id: string, data: Partial<Omit<PetProfile, 'id' | 'createdAt' | 'updatedAt'>>) => void
   archivePetProfile: (id: string) => void
   setActivePet: (id: string) => void
+  addPetWeight: (petId: string, kg: number, date: string) => void
   addPetCommand: (petId: string, nombre: string) => string
   updatePetCommand: (id: string, patch: Partial<Pick<PetCommand, 'nivel' | 'sesiones'>>) => void
   archivePetCommand: (id: string) => void
@@ -318,6 +321,12 @@ export const useDb = create<DbState & DbActions>()(
           return { petProfiles, activePetId }
         }),
       setActivePet: (id) => set({ activePetId: id }),
+      addPetWeight: (petId, kg, date) =>
+        set((s) => ({
+          petProfiles: s.petProfiles.map((p) =>
+            p.id === petId ? { ...p, pesos: [...(p.pesos ?? []), { date, kg }].sort((a, b) => a.date.localeCompare(b.date)), updatedAt: Date.now() } : p,
+          ),
+        })),
 
       addPetCommand: (petId, nombre) => {
         const id = uuid()

@@ -97,6 +97,11 @@ export default function SubView({ category, sub }: { category: Category; sub: Su
             <BackButton />
             <ScreenTitle categoryId={category.id} subId={sub.id} />
           </View>
+          {sub.link && (
+            <Pressable onPress={() => goToSub(category.id, sub.link!.subId)} className="rounded-lg bg-shu-500 px-4 py-2.5">
+              <Text className="font-medium text-washi">{sub.link.label}</Text>
+            </Pressable>
+          )}
         </View>
 
         {isPetOwned && hasPets && <PetSwitcher onAdd={() => addPetProfile({ nombre: '' })} />}

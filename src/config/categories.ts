@@ -36,6 +36,8 @@ export interface Subcategory {
   hidden?: boolean
   /** Permite ver los registros por día, semana o mes (en vez de solo por mes). */
   periods?: boolean
+  /** Botón en la pantalla que lleva a otra subcategoría de la misma categoría (ej. Paseos → En vivo). */
+  link?: { label: string; subId: string }
   /** Pantalla propia en vez del formulario genérico (ver App.tsx). */
   custom?: 'finance-home' | 'daily-goals' | 'long-goals' | 'pet-profile' | 'pet-lost' | 'pet-training' | 'pet-walk-live'
 }
@@ -215,16 +217,6 @@ export const CATEGORIES: Category[] = [
     color: 'sky',
     subcategories: [
       {
-        id: 'sesiones',
-        name: 'Sesiones',
-        icon: '📖',
-        fields: [
-          { key: 'libro', label: 'Libro', type: 'text', required: true },
-          { key: 'paginas', label: 'Páginas', type: 'number', aggregate: 'sum' },
-          minutos,
-        ],
-      },
-      {
         id: 'libros',
         name: 'Libros',
         icon: '📕',
@@ -233,6 +225,16 @@ export const CATEGORIES: Category[] = [
           { key: 'autor', label: 'Autor', type: 'text' },
           { key: 'estado', label: 'Estado', type: 'select', options: ['Pendiente', 'Leyendo', 'Terminado', 'Abandonado'], required: true },
           { key: 'puntaje', label: 'Puntaje (1-5)', type: 'number', aggregate: 'avg' },
+        ],
+      },
+      {
+        id: 'sesiones',
+        name: 'Sesiones',
+        icon: '📖',
+        fields: [
+          { key: 'libro', label: 'Libro', type: 'text', required: true },
+          { key: 'paginas', label: 'Páginas', type: 'number', aggregate: 'sum' },
+          minutos,
         ],
       },
     ],
@@ -250,9 +252,10 @@ export const CATEGORIES: Category[] = [
         id: 'paseos',
         name: 'Paseos',
         icon: '🦮',
+        link: { label: '🛰️ En vivo', subId: 'paseo-vivo' },
         fields: [{ ...minutos, required: true }, { key: 'km', label: 'Distancia', type: 'number', unit: 'km', aggregate: 'sum' }],
       },
-      { id: 'paseo-vivo', name: 'Paseo en vivo', icon: '🛰️', fields: [], custom: 'pet-walk-live' },
+      { id: 'paseo-vivo', name: 'Paseo en vivo', icon: '🛰️', fields: [], custom: 'pet-walk-live', hidden: true },
       {
         id: 'alimento',
         name: 'Alimentación',
@@ -268,26 +271,11 @@ export const CATEGORIES: Category[] = [
         icon: '🩺',
         fields: [
           { key: 'motivo', label: 'Motivo', type: 'select', multi: true, options: ['Control', 'Vacuna', 'Desparasitación', 'Baño', 'Enfermedad', 'Otro'], required: true },
+          { key: 'nombre', label: 'Vacuna / medicamento', type: 'text' },
+          { key: 'proximaDosis', label: 'Próxima dosis', type: 'date', reminder: true },
           { key: 'costo', label: 'Costo', type: 'number', unit: '$', money: true, aggregate: 'sum' },
           { key: 'detalle', label: 'Detalle', type: 'text' },
         ],
-      },
-      {
-        id: 'vacunas',
-        name: 'Vacunas',
-        icon: '💉',
-        fields: [
-          { key: 'tipo', label: 'Tipo', type: 'select', options: ['Vacuna', 'Antiparasitario'], required: true },
-          { key: 'nombre', label: 'Nombre', type: 'text', required: true },
-          { key: 'proximaDosis', label: 'Próxima dosis', type: 'date', reminder: true },
-          { key: 'detalle', label: 'Nota', type: 'text' },
-        ],
-      },
-      {
-        id: 'peso',
-        name: 'Peso',
-        icon: '⚖️',
-        fields: [{ key: 'kg', label: 'Peso', type: 'number', unit: 'kg', required: true, aggregate: 'avg' }],
       },
       { id: 'entrenamiento', name: 'Entrenamiento', icon: '🎓', fields: [], custom: 'pet-training' },
       { id: 'perdido', name: 'Modo perdido', icon: '🚨', fields: [], custom: 'pet-lost' },

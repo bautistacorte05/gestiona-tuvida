@@ -6,7 +6,7 @@ import { captureRef } from 'react-native-view-shot';
 
 import { TRAINING_CATEGORIES, type TrainingCategory } from '../config/training';
 import { useDb, type PetProfile } from '../lib/db';
-import { formatDay } from '../lib/dates';
+import { formatDay, today } from '../lib/dates';
 import { pickAndResizeImage } from '../lib/image';
 import DateField from './DateField';
 import PetSwitcher from './PetSwitcher';
@@ -194,6 +194,7 @@ function PetProfileForm({ profile }: { profile?: PetProfile }) {
             <Text style={{ color: '#ede3d3', fontSize: 26, fontWeight: '700' }}>{profile.nombre}</Text>
             {profile.raza && <Text style={{ color: '#c4b69c', fontSize: 13 }}>Raza: {profile.raza}</Text>}
             {profile.nacimiento && <Text style={{ color: '#c4b69c', fontSize: 13 }}>Nacimiento: {formatDay(profile.nacimiento, { day: 'numeric', month: 'long', year: 'numeric' })}</Text>}
+            {!!profile.pesos?.length && <Text style={{ color: '#c4b69c', fontSize: 13 }}>Peso: {formatKg(profile.pesos[profile.pesos.length - 1].kg)}</Text>}
           </View>
         </View>
         {profile.telefono && (
@@ -210,9 +211,72 @@ function PetProfileForm({ profile }: { profile?: PetProfile }) {
           <Text className="font-medium text-washi">Compartir</Text>
         </Pressable>
       </View>
+      <WeightCard profile={profile} />
       <Pressable onPress={removePet} className="items-center py-1">
         <Text className="text-sm text-kurenai-400">Borrar esta mascota</Text>
       </Pressable>
     </>
+  );
+}
+
+const formatKg = (kg: number) => `${kg.toLocaleString('es-AR', { maximumFractionDigits: 2 })} kg`;
+
+/** Peso actual + historial (antes era la sección "Peso"; los registros viejos se migraron acá). */
+function WeightCard({ profile }: { profile: PetProfile }) {
+  const [kg, setKg] = useState('');
+  const history = [...(profile.pesos ?? [])].reverse();
+  const current = history[0];
+
+  const add = () => {
+    const value = Number(kg.replace(',', '.'));
+    if (!Number.isFinite(value) || value <= 0) return;
+    useDb.getState().addPetWeight(profile.id, value, today());
+    setKg('');
+  };
+
+  return (
+    <View className="gap-3 rounded-xl border border-ink-800 bg-ink-900/60 p-4">
+      <View className="flex-row items-baseline justify-between">
+        <Text className="text-base font-semibold text-ink-100">⚖️ Peso</Text>
+        {current && (
+          <Text className="text-sm text-ink-400">
+            <Text className="text-lg font-semibold text-ink-100">{formatKg(current.kg)}</Text> · {formatDay(current.date, { day: 'numeric', month: 'short' })}
+          </Text>
+        )}
+      </View>
+      <View className="flex-row gap-2">
+        <TextInput
+          className="flex-1 rounded-lg border border-ink-700 bg-ink-900 px-3 py-2.5 text-base text-ink-100"
+          placeholder="Peso de hoy en kg, ej: 8,5"
+          placeholderTextColor="#877a61"
+          keyboardType="decimal-pad"
+          value={kg}
+          onChangeText={setKg}
+          onSubmitEditing={add}
+        />
+        <Pressable onPress={add} className={`items-center justify-center rounded-lg bg-shu-500 px-4 ${kg.trim() ? '' : 'opacity-50'}`}>
+          <Text className="font-medium text-washi">Registrar</Text>
+        </Pressable>
+      </View>
+      {history.length > 1 && (
+        <View className="gap-1">
+          {history.slice(0, 8).map((h, i) => {
+            const prev = history[i + 1];
+            const diff = prev ? h.kg - prev.kg : 0;
+            return (
+              <View key={`${h.date}-${i}`} className="flex-row justify-between">
+                <Text className="text-sm text-ink-400">{formatDay(h.date, { day: 'numeric', month: 'short', year: 'numeric' })}</Text>
+                <Text className="text-sm text-ink-200">
+                  {formatKg(h.kg)}
+                  {prev && Math.abs(diff) >= 0.01 ? (
+                    <Text className={diff > 0 ? 'text-gold-300' : 'text-moss-300'}> ({diff > 0 ? '+' : '−'}{formatKg(Math.abs(diff))})</Text>
+                  ) : null}
+                </Text>
+              </View>
+            );
+          })}
+        </View>
+      )}
+    </View>
   );
 }
