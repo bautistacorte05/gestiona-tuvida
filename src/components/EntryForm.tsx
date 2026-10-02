@@ -8,6 +8,7 @@ import { useThemeColors } from '../lib/theme';
 import { money } from './common';
 import DateField from './DateField';
 import ItemsEditor, { draftsToItems, parseNum, type ItemDraft } from './ItemsEditor';
+import TimeField from './TimeField';
 
 interface Props {
   category: Category;
@@ -159,6 +160,8 @@ export default function EntryForm({ category, sub, entry, defaultDate, onClose }
                   </View>
                 ) : f.type === 'date' ? (
                   <DateField value={values[f.key] as string} onChange={(v) => setValues((s) => ({ ...s, [f.key]: v }))} />
+                ) : f.type === 'time' ? (
+                  <TimeField value={values[f.key] as string} onChange={(v) => setValues((s) => ({ ...s, [f.key]: v }))} />
                 ) : (
                   <TextInput
                     className="rounded-lg border border-ink-700 bg-ink-900 px-3 py-2.5 text-base text-ink-100"
