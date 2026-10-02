@@ -5,36 +5,53 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Card, Empty, EntryRow } from '../../components/common';
 import DayPlan from '../../components/DayPlan';
 import EntryForm from '../../components/EntryForm';
-import MinutesSheet from '../../components/MinutesSheet';
+import { DayChart, GoalsHint, HabitGrid, HabitProgressList, MonthProgress } from '../../components/HabitPanel';
 import { DayStack } from '../../components/TimeCharts';
 import { COLOR_CLASSES, DAILY_CATEGORIES, findSub, type Category, type Subcategory } from '../../config/categories';
-import { formatDay, shiftDay, today } from '../../lib/dates';
+import { formatDay, monthKey, shiftDay, today } from '../../lib/dates';
 import { useDb, type Entry } from '../../lib/db';
+import { buildHabits, dayProgress, doneDatesByKey, habitRows, isActiveInMonth, monthSummary } from '../../lib/habits';
 import { useCategoryName } from '../../lib/names';
-import { goToSub } from '../../lib/nav';
-import { computeStreak, greeting } from '../../lib/streak';
+import { greeting } from '../../lib/streak';
 import { formatMinutes, minutesByDay } from '../../lib/time';
 
 type Editing = { category: Category; sub: Subcategory; entry?: Entry };
 
+/**
+ * Hoy: la grilla de hábitos (actividades + metas diarias), el Plan del día del día elegido,
+ * el progreso del mes, el tiempo dedicado y lo registrado. El día elegido se cambia con
+ * ‹ › arriba, con ‹ › de la grilla o tocando un día de la grilla.
+ */
 export default function HoyScreen() {
   const nameOf = useCategoryName();
+  const t = today();
   const [date, setDate] = useState(today);
   const [editing, setEditing] = useState<Editing | null>(null);
-  const [timing, setTiming] = useState<Category | null>(null);
 
   const allEntries = useDb((s) => s.entries);
   const allChecks = useDb((s) => s.checks);
+  const goals = useDb((s) => s.dailyGoals);
   const nombre = useDb((s) => s.userProfile[0]?.nombre);
+
+  const habits = useMemo(
+    () => buildHabits(goals, DAILY_CATEGORIES.map((c) => ({ id: c.id, name: nameOf(c.id, c.name), icon: c.icon }))),
+    [goals, nameOf],
+  );
+  const done = useMemo(() => doneDatesByKey(allChecks, habits.map((h) => h.key)), [allChecks, habits]);
+  const month = monthKey(date);
+  const monthHabits = useMemo(() => habits.filter((h) => isActiveInMonth(h, month)), [habits, month]);
+  const summary = useMemo(() => monthSummary(monthHabits, done, month, t), [monthHabits, done, month, t]);
+  const rows = useMemo(() => habitRows(monthHabits, done, month, t), [monthHabits, done, month, t]);
+  const progress = dayProgress(habits, done, date);
+  const hasGoals = goals.some((g) => !g.archived);
 
   const entries = useMemo(
     () => allEntries.filter((e) => e.date === date && DAILY_CATEGORIES.some((c) => c.id === e.categoryId)).sort((a, b) => a.createdAt - b.createdAt),
     [allEntries, date],
   );
   const checks = useMemo(() => allChecks.filter((c) => c.date === date), [allChecks, date]);
-  const done = new Set(checks.map((c) => c.categoryId));
-  const doneCount = DAILY_CATEGORIES.filter((c) => done.has(c.id)).length;
-  const isToday = date === today();
+  const isToday = date === t;
+  // Minutos de los registros de cada actividad (más los cargados a mano antes, que siguen contando).
   const minutes = useMemo(() => minutesByDay(checks, entries).get(date) ?? new Map<string, number>(), [checks, entries, date]);
   const totalMin = [...minutes.values()].reduce((a, b) => a + b, 0);
 
@@ -63,65 +80,21 @@ export default function HoyScreen() {
         {isToday && (
           <View className="flex-row items-center justify-between gap-3">
             <Text className="shrink text-2xl font-bold text-ink-100">{greeting()}{nombre ? `, ${nombre}` : ''} 👋</Text>
-            <Text className="text-sm font-medium text-ink-400">
-              {doneCount}/{DAILY_CATEGORIES.length} · {Math.round((doneCount / DAILY_CATEGORIES.length) * 100)}%
-            </Text>
+            {progress.active > 0 && (
+              <Text className="text-sm font-medium text-ink-400">
+                {progress.done}/{progress.active} · {Math.round((progress.done / progress.active) * 100)}%
+              </Text>
+            )}
           </View>
         )}
 
+        <HabitGrid habits={habits} done={done} date={date} onSelectDate={setDate} />
+
         <DayPlan date={date} />
 
-        <View>
-          {!isToday && (
-            <View className="mb-2 flex-row items-center justify-between">
-              <Text className="text-sm text-ink-400">¿Qué hiciste este día?</Text>
-              <Text className="text-sm font-medium text-ink-200">
-                {doneCount} / {DAILY_CATEGORIES.length}
-              </Text>
-            </View>
-          )}
-          <View className="mb-3 h-2 overflow-hidden rounded-full bg-ink-800">
-            <View className="h-full rounded-full bg-shu-500" style={{ width: `${(doneCount / DAILY_CATEGORIES.length) * 100}%` }} />
-          </View>
-
-          <View className="flex-row flex-wrap gap-3">
-            {DAILY_CATEGORIES.map((cat) => {
-              const checked = done.has(cat.id);
-              const count = entries.filter((e) => e.categoryId === cat.id).length;
-              const streak = computeStreak(allChecks, cat.id);
-              return (
-                <View
-                  key={cat.id}
-                  className={`h-28 overflow-hidden rounded-2xl border-2 ${checked ? 'border-moss-500 bg-moss-500/20' : 'border-ink-800 bg-ink-900'}`}
-                  style={{ width: '47%' }}>
-                  {streak > 0 && (
-                    <View className="absolute right-1.5 top-1.5 z-10 flex-row items-center rounded-full border border-gold-500/50 bg-ink-950/80 px-1.5 py-0.5">
-                      <Text className="text-[11px] font-medium text-gold-300">🔥{streak}</Text>
-                    </View>
-                  )}
-                  <Pressable onPress={() => useDb.getState().toggleCheck(date, cat.id)} className="flex-1 items-center justify-center gap-0.5 p-2">
-                    <Text className="text-2xl">{cat.icon}</Text>
-                    <Text className={`text-sm font-semibold ${checked ? 'text-moss-300' : 'text-ink-200'}`}>{nameOf(cat.id, cat.name)}</Text>
-                  </Pressable>
-                  <View className={`flex-row border-t ${checked ? 'border-moss-500/40' : 'border-ink-800/80'}`}>
-                    <Pressable onPress={() => setTiming(cat)} className="flex-1 items-center py-1.5">
-                      <Text className={`text-xs ${minutes.get(cat.id) ? 'font-medium text-ink-100' : 'text-ink-400'}`}>
-                        ⏱ {minutes.get(cat.id) ? formatMinutes(minutes.get(cat.id)!) : 'Tiempo'}
-                      </Text>
-                    </Pressable>
-                    <Pressable
-                      onPress={() => goToSub(cat.id, cat.subcategories[0].id)}
-                      className={`flex-1 items-center border-l py-1.5 ${checked ? 'border-moss-500/40' : 'border-ink-800/80'}`}>
-                      <Text className="text-xs text-ink-400">
-                        {count ? `${count} · ` : ''}Detalle ›
-                      </Text>
-                    </Pressable>
-                  </View>
-                </View>
-              );
-            })}
-          </View>
-        </View>
+        <MonthProgress month={month} summary={summary} />
+        <DayChart byDay={summary.byDay} selected={date} />
+        <HabitProgressList rows={rows} />
 
         <Card>
           <View className="mb-3 flex-row items-baseline justify-between">
@@ -143,7 +116,7 @@ export default function HoyScreen() {
                 ))}
             </View>
           ) : (
-            <Text className="mt-3 text-xs text-ink-500">Tocá &quot;⏱ Tiempo&quot; en un cuadrado para cargar los minutos.</Text>
+            <Text className="mt-3 text-xs text-ink-500">El tiempo sale de la duración que cargás adentro de cada actividad (Gimnasio, Jornada, Sesiones de lectura, Paseos).</Text>
           )}
         </Card>
 
@@ -170,11 +143,12 @@ export default function HoyScreen() {
             </View>
           </View>
         ) : (
-          <Empty>Tocá un cuadrado para marcarlo como hecho. En &quot;Detalle&quot; podés cargar datos.</Empty>
+          <Empty>Todavía no registraste nada este día. Para cargar datos (duración, páginas, kilómetros…), entrá a cada actividad desde el menú.</Empty>
         )}
+
+        {!hasGoals && <GoalsHint />}
       </ScrollView>
 
-      {timing && <MinutesSheet category={timing} date={date} current={checks.find((c) => c.categoryId === timing.id)?.minutos} onClose={() => setTiming(null)} />}
       {editing && <EntryForm {...editing} defaultDate={date} onClose={() => setEditing(null)} />}
     </SafeAreaView>
   );

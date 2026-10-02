@@ -1,9 +1,9 @@
-import { monthRange, shiftDay, toISO } from './dates';
+import { monthKey, monthRange, shiftDay, toISO, weekStart } from './dates';
 import type { Check, DailyGoal } from './db';
 
 /**
- * Cálculos del Panel de hábitos (Metas → Panel de hábitos). Funciones puras: reciben los datos
- * y la fecha de hoy, no leen la base ni el reloj, así se pueden probar sueltas.
+ * Cálculos de la grilla de hábitos de Hoy. Funciones puras: reciben los datos y la fecha de
+ * hoy, no leen la base ni el reloj, así se pueden probar sueltas.
  *
  * Un hábito es una actividad de Hoy (Entrenamiento, Lectura…) o una meta diaria. Los dos guardan
  * el tilde de cada día en `checks`: las actividades con su id ('lectura') y las metas con `goal:<id>`.
@@ -48,10 +48,26 @@ export function isActiveOn(h: Habit, date: string) {
   return (!h.from || date >= h.from) && (!h.until || date <= h.until);
 }
 
+/** ¿El hábito contó al menos un día entre esas dos fechas (inclusive)? */
+export function isActiveInRange(h: Habit, start: string, end: string) {
+  return (!h.from || h.from <= end) && (!h.until || h.until >= start);
+}
+
 /** ¿El hábito contó al menos un día de ese mes? */
 export function isActiveInMonth(h: Habit, month: string) {
   const { start, end } = monthRange(month);
-  return (!h.from || h.from <= end) && (!h.until || h.until >= start);
+  return isActiveInRange(h, start, end);
+}
+
+/** Los 7 días (lunes a domingo) de la semana que contiene la fecha; pueden caer en dos meses. */
+export function weekDates(date: string) {
+  const start = weekStart(date);
+  return Array.from({ length: 7 }, (_, i) => shiftDay(start, i));
+}
+
+/** Día que queda elegido al pasar a otro mes: hoy si es el mes actual, si no el 1. */
+export function monthDefaultDate(month: string, today: string) {
+  return monthKey(today) === month ? today : `${month}-01`;
 }
 
 /** Días con tilde de cada hábito. */
@@ -160,4 +176,25 @@ export function habitStats(h: Habit, dates: Set<string>, month: string, today: s
     if (dates.has(date)) done++;
   }
   return { done, possible, pct: possible ? done / possible : undefined, ...streaks(dates, today) };
+}
+
+export type HabitRow = ReturnType<typeof habitStats> & { h: Habit };
+
+/** Cada hábito con su cumplimiento del mes, de más a menos cumplido (los empates, en el orden de la grilla). */
+export function habitRows(habits: Habit[], done: Map<string, Set<string>>, month: string, today: string): HabitRow[] {
+  return habits
+    .map((h) => ({ h, ...habitStats(h, done.get(h.key) ?? new Set<string>(), month, today) }))
+    .sort((a, b) => (b.pct ?? -1) - (a.pct ?? -1));
+}
+
+/** Hábitos hechos y hábitos que contaban un día puntual (cualquier fecha, también futura). */
+export function dayProgress(habits: Habit[], done: Map<string, Set<string>>, date: string) {
+  let d = 0;
+  let active = 0;
+  for (const h of habits) {
+    if (!isActiveOn(h, date)) continue;
+    active++;
+    if (done.get(h.key)?.has(date)) d++;
+  }
+  return { done: d, active };
 }

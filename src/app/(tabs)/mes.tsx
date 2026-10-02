@@ -110,7 +110,7 @@ export default function MesScreen() {
         <View className="rounded-2xl border border-ink-800 bg-ink-900 p-4">
           <Text className="mb-3 text-sm text-ink-400">Reparto del tiempo</Text>
           {cur.total === 0 ? (
-            <Text className="text-sm text-ink-500">Todavía no cargaste tiempo este mes. En &quot;Hoy&quot;, tocá &quot;⏱ Tiempo&quot; en cada actividad.</Text>
+            <Text className="text-sm text-ink-500">Todavía no cargaste tiempo este mes. Cargá la duración adentro de cada actividad (Gimnasio, Jornada, Sesiones de lectura, Paseos).</Text>
           ) : (
             <View className="gap-3">
               {rows.map((r) => (

@@ -5,7 +5,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import DailyGoalsView from '../../../../components/DailyGoalsView';
 import FinanceHomeView from '../../../../components/FinanceHomeView';
-import HabitPanelView from '../../../../components/HabitPanelView';
 import LongGoalsView from '../../../../components/LongGoalsView';
 import PetLostView from '../../../../components/PetLostView';
 import PetProfileView from '../../../../components/PetProfileView';
@@ -37,7 +36,6 @@ function renderSub(found: { category: Category; sub: Subcategory } | undefined):
   if (found.sub.custom === 'finance-home') return <FinanceHomeView />;
   if (found.sub.custom === 'daily-goals') return <DailyGoalsView />;
   if (found.sub.custom === 'long-goals') return <LongGoalsView />;
-  if (found.sub.custom === 'habit-panel') return <HabitPanelView />;
   if (found.sub.custom === 'pet-profile') return <PetProfileView />;
   if (found.sub.custom === 'pet-lost') return <PetLostView />;
   if (found.sub.custom === 'pet-training') return <PetTrainingView />;

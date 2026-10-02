@@ -2,9 +2,9 @@ import { useMemo, useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
 
 import { formatDay, today } from '../lib/dates';
-import { useDb, type DailyGoal, type DayTask, type FixedTask } from '../lib/db';
-import { computeStreak } from '../lib/streak';
+import { useDb, type DayTask, type FixedTask } from '../lib/db';
 import { useThemeColors } from '../lib/theme';
+import { CheckSquare } from './HabitPanel';
 import TimeField from './TimeField';
 
 const WEEKDAYS = [
@@ -30,11 +30,10 @@ type Item = {
   badge?: string;
 };
 
-// Metas diarias y tareas fijas guardan el tilde de cada día en `checks` (como las actividades).
-const goalCheckId = (id: string) => `goal:${id}`;
+// Las tareas fijas guardan el tilde de cada día en `checks` (como las actividades y las metas diarias).
 const taskCheckId = (id: string) => `task:${id}`;
 
-function buildItems(date: string, tasks: DayTask[], fixed: FixedTask[], goals: DailyGoal[], checked: Set<string>, streakOf: (catId: string) => number) {
+function buildItems(date: string, tasks: DayTask[], fixed: FixedTask[], checked: Set<string>) {
   const weekday = new Date(`${date}T00:00:00`).getDay();
   const dayEnd = new Date(`${date}T23:59:59`).getTime();
   const { toggleCheck, updateDayTask, deleteDayTask, archiveFixedTask } = useDb.getState();
@@ -66,18 +65,6 @@ function buildItems(date: string, tasks: DayTask[], fixed: FixedTask[], goals: D
       badge: '🔁',
     });
   }
-  for (const g of goals) {
-    if (g.archived || g.createdAt > dayEnd) continue;
-    const streak = streakOf(goalCheckId(g.id));
-    items.push({
-      key: g.id,
-      title: g.title,
-      done: checked.has(goalCheckId(g.id)),
-      createdAt: g.createdAt,
-      toggle: () => toggleCheck(date, goalCheckId(g.id)),
-      badge: streak > 0 ? `🎯 🔥${streak}` : '🎯',
-    });
-  }
 
   // Primero lo que tiene hora (en orden), después el resto en el orden en que se cargó.
   return items.sort((a, b) => {
@@ -91,15 +78,11 @@ function buildItems(date: string, tasks: DayTask[], fixed: FixedTask[], goals: D
 function Row({ item }: { item: Item }) {
   return (
     <View className="flex-row items-center gap-3 py-1.5">
-      <Pressable
-        onPress={item.toggle}
-        accessibilityLabel={`${item.title}: ${item.done ? 'hecho' : 'sin hacer'}`}
-        className={`h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 ${item.done ? 'border-moss-500 bg-moss-500' : 'border-ink-600'}`}>
-        <Text className={`text-sm font-bold ${item.done ? 'text-washi' : 'text-transparent'}`}>✓</Text>
-      </Pressable>
+      {/* El mismo cuadradito que la grilla de hábitos. */}
+      <CheckSquare state={item.done ? 'done' : 'missed'} size={26} label={`${item.title}: ${item.done ? 'hecho' : 'sin hacer'}`} onPress={item.toggle} />
       {/* Márgenes explícitos (no gap-x): en el celular el gap entre textos no se aplicaba y la hora quedaba pegada. */}
       <Pressable onPress={item.toggle} className="flex-1 flex-row flex-wrap items-center">
-        {!!item.time && <Text className={`mr-2 text-sm font-semibold ${item.done ? 'text-ink-500' : 'text-gold-300'}`}>{item.time}</Text>}
+        {!!item.time && <Text className={`mr-2 text-sm font-semibold ${item.done ? 'text-ink-500' : 'text-shu-400'}`}>{item.time}</Text>}
         <Text className={`mr-2 text-base ${item.done ? 'text-ink-500 line-through' : 'text-ink-100'}`}>{item.title}</Text>
         {!!item.badge && <Text className="text-xs text-ink-400">{item.badge}</Text>}
       </Pressable>
@@ -216,17 +199,16 @@ function PendingFromBefore() {
   );
 }
 
-/** Hoy → "Plan del día": tareas sueltas del día, tareas fijas de ese día de la semana y metas diarias. */
+/** Hoy → "Plan del día": tareas sueltas del día y tareas fijas de ese día de la semana (las metas diarias van en la grilla). */
 export default function DayPlan({ date }: { date: string }) {
   const tasks = useDb((s) => s.dayTasks);
   const fixed = useDb((s) => s.fixedTasks);
-  const goals = useDb((s) => s.dailyGoals);
   const allChecks = useDb((s) => s.checks);
 
   const items = useMemo(() => {
     const checked = new Set(allChecks.filter((c) => c.date === date).map((c) => c.categoryId));
-    return buildItems(date, tasks, fixed, goals, checked, (catId) => computeStreak(allChecks, catId));
-  }, [date, tasks, fixed, goals, allChecks]);
+    return buildItems(date, tasks, fixed, checked);
+  }, [date, tasks, fixed, allChecks]);
 
   const doneCount = items.filter((i) => i.done).length;
   const isToday = date === today();

@@ -21,7 +21,7 @@ function entryMinutes(e: Entry) {
 }
 
 /**
- * Minutos por día y categoría. Si se cargó el tiempo en el cuadrado se usa ese;
+ * Minutos por día y categoría. Si ese día se cargó el tiempo a mano (el viejo "⏱ Tiempo" de Hoy; ya no se carga más, pero sigue contando) se usa ese;
  * si no, se suma lo que haya en los registros de detalle de ese día.
  */
 export function minutesByDay(checks: Check[], entries: Entry[]) {

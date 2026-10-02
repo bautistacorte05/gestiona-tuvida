@@ -39,7 +39,7 @@ export interface Subcategory {
   /** Botón en la pantalla que lleva a otra subcategoría de la misma categoría (ej. Paseos → En vivo). */
   link?: { label: string; subId: string }
   /** Pantalla propia en vez del formulario genérico (ver App.tsx). */
-  custom?: 'finance-home' | 'daily-goals' | 'long-goals' | 'habit-panel' | 'pet-profile' | 'pet-lost' | 'pet-training' | 'pet-walk-live'
+  custom?: 'finance-home' | 'daily-goals' | 'long-goals' | 'pet-profile' | 'pet-lost' | 'pet-training' | 'pet-walk-live'
 }
 
 export interface Category {
@@ -48,7 +48,7 @@ export interface Category {
   icon: string
   /** Color de acento (clase de Tailwind sin prefijo, ej: "emerald"). */
   color: string
-  /** Aparece como cuadrado con tic en la pantalla principal. */
+  /** Aparece como fila de la grilla de hábitos de Hoy (con tilde por día). */
   daily?: boolean
   /** Color en los gráficos de tiempo (paleta validada para daltonismo sobre fondo oscuro). */
   chart?: string
@@ -314,7 +314,6 @@ export const CATEGORIES: Category[] = [
     color: 'violet',
     subcategories: [
       { id: 'diarias', name: 'Diarias', icon: '☑️', fields: [], custom: 'daily-goals' },
-      { id: 'panel', name: 'Panel de hábitos', icon: '📆', fields: [], custom: 'habit-panel' },
       { id: 'largoplazo', name: 'Largo plazo', icon: '🏁', fields: [], custom: 'long-goals' },
     ],
   },
@@ -340,7 +339,7 @@ export const CATEGORIES: Category[] = [
   },
 ]
 
-// Orden de los cuadrados en la pantalla principal.
+// Orden de las filas en la grilla de hábitos de Hoy.
 const DAILY_ORDER = ['entrenamiento', 'lectura', 'trabajo', 'mascota', 'comida']
 // Orden fijo en los gráficos apilados (el validado de la paleta).
 export const CHART_ORDER = ['lectura', 'entrenamiento', 'trabajo', 'comida', 'mascota']
