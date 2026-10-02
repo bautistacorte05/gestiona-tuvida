@@ -14,7 +14,8 @@ import ScreenTitle from '../ScreenTitle';
 export function SheetScreen({ categoryId, children, overlay }: { categoryId: string; children: ReactNode; overlay?: ReactNode }) {
   return (
     <SafeAreaView className="flex-1 bg-ink-950" edges={['top']}>
-      <ScrollView className="flex-1 px-4" contentContainerClassName="gap-5 pb-10 pt-4" keyboardShouldPersistTaps="handled">
+      {/* En la PC el contenido no se estira a todo el ancho (max-w-3xl, centrado). */}
+      <ScrollView className="flex-1 px-4" contentContainerClassName="w-full max-w-3xl self-center gap-5 pb-10 pt-4" keyboardShouldPersistTaps="handled">
         <View className="flex-row items-center gap-2">
           <BackButton />
           <ScreenTitle categoryId={categoryId} />
