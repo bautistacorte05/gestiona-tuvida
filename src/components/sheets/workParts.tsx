@@ -8,6 +8,7 @@ import { useThemeColors } from '../../lib/theme';
 import { listDate } from '../../lib/training';
 import { formatHours, NEXT_STEP, TASK_STATES, todayJornada, weekProgress, type TaskState } from '../../lib/work';
 import { parseNum } from '../ItemsEditor';
+import TrashButton from '../TrashButton';
 import { Choice, Hero, PrimaryButton, Section, Segmented, SmallButton } from './kit';
 
 /** Piezas de la hoja de Trabajo (ver WorkSheet). Todo el color sale del color de la app. */
@@ -332,6 +333,7 @@ export function WorkTasks({ tasks, onOpen }: { tasks: Record<TaskState, Entry[]>
                   className="h-9 items-center justify-center rounded-[10px] border border-shu-400 px-3 active:bg-shu-500/15">
                   <Text className="text-[13px] font-semibold text-shu-300">{step.label}</Text>
                 </Pressable>
+                <TrashButton what={`la tarea "${tarea || 'sin nombre'}"`} onDelete={() => useDb.getState().deleteEntry(e.id)} />
               </View>
             );
           })}
@@ -384,23 +386,25 @@ export function WorkRecentDays({ entries, now, onOpen, onAdd }: { entries: Entry
             const modalidad = typeof e.values.modalidad === 'string' ? e.values.modalidad : '';
             const nota = typeof e.values.nota === 'string' ? e.values.nota : '';
             return (
-              <Pressable
-                key={e.id}
-                onPress={() => onOpen(e)}
-                accessibilityRole="button"
-                accessibilityHint="Abre la jornada para cambiarla o borrarla"
-                className={`px-4 py-3.5 active:bg-ink-800/60 ${i < list.length - 1 ? 'border-b border-ink-800' : ''}`}>
-                <Text className="text-[15px] font-semibold text-ink-100">
-                  {h ? `${formatHours(h)} h` : 'Jornada'}
-                  {modalidad ? ` · ${modalidad}` : ''}
-                </Text>
-                <Text className="mt-0.5 text-xs text-ink-400">{listDate(e.date, now)}</Text>
-                {!!nota && (
-                  <Text numberOfLines={1} className="mt-0.5 text-xs text-ink-500">
-                    {nota}
+              <View key={e.id} className={`flex-row items-center pr-1 ${i < list.length - 1 ? 'border-b border-ink-800' : ''}`}>
+                <Pressable
+                  onPress={() => onOpen(e)}
+                  accessibilityRole="button"
+                  accessibilityHint="Abre la jornada para cambiarla"
+                  className="min-w-0 flex-1 py-3.5 pl-4 pr-2 active:bg-ink-800/60">
+                  <Text className="text-[15px] font-semibold text-ink-100">
+                    {h ? `${formatHours(h)} h` : 'Jornada'}
+                    {modalidad ? ` · ${modalidad}` : ''}
                   </Text>
-                )}
-              </Pressable>
+                  <Text className="mt-0.5 text-xs text-ink-400">{listDate(e.date, now)}</Text>
+                  {!!nota && (
+                    <Text numberOfLines={1} className="mt-0.5 text-xs text-ink-500">
+                      {nota}
+                    </Text>
+                  )}
+                </Pressable>
+                <TrashButton what={`la jornada del ${listDate(e.date, now)}`} onDelete={() => useDb.getState().deleteEntry(e.id)} />
+              </View>
             );
           })}
         </View>

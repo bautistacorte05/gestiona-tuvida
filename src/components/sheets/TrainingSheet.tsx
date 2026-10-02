@@ -10,8 +10,8 @@ import { SheetScreen } from './kit';
 import { TrainingCalendar, TrainingGroups, TrainingQuickLog, TrainingRecent, TrainingWeekHero } from './trainingParts';
 
 /**
- * Hoja de Entrenamiento: la semana, qué grupos se trabajaron, los días de las últimas semanas,
- * anotar el de hoy y los últimos registros. Los días salen de lo que se tilda en Hoy o de los
+ * Hoja de Entrenamiento: la semana, los días de las últimas semanas, anotar el de hoy, qué grupos
+ * se trabajaron y los últimos registros. Los días salen de lo que se tilda en Hoy o de los
  * registros de Gimnasio (no hace falta cargar nada para que cuenten).
  */
 export default function TrainingSheet() {
@@ -36,9 +36,9 @@ export default function TrainingSheet() {
       categoryId="entrenamiento"
       overlay={editing ? <EntryForm category={found.category} sub={found.sub} entry={editing.entry} defaultDate={now} onClose={() => setEditing(null)} /> : null}>
       <TrainingWeekHero days={week.days} done={week.done} now={now} trainedDays={week.trainedDays} minutes={week.minutes} streak={streak} />
-      <TrainingGroups stats={groups} now={now} />
       <TrainingCalendar weeks={weeks} done={week.done} now={now} />
       <TrainingQuickLog groups={groupOptions} />
+      <TrainingGroups stats={groups} now={now} />
       <TrainingRecent entries={recent} sub={found.sub} now={now} onOpen={(entry) => setEditing({ entry })} onAdd={() => setEditing({})} />
     </SheetScreen>
   );

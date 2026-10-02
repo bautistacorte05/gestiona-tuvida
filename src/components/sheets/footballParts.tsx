@@ -5,6 +5,7 @@ import { today } from '../../lib/dates';
 import { useDb, type Entry } from '../../lib/db';
 import { formatDecimal, formatInt, matchStatsText, RESULT_LETTER, RESULTS, resultOf, type MatchResult, type MatchSummary } from '../../lib/football';
 import { listDate } from '../../lib/training';
+import TrashButton from '../TrashButton';
 import { Chip, Choice, Hero, NumberStepper, PrimaryButton, Section, SmallButton, StatTile } from './kit';
 
 /**
@@ -262,20 +263,22 @@ export function FootballMatches({
           const title = [r ?? 'Partido', formato].filter(Boolean).join(' · ');
           const stats = matchStatsText(m);
           return (
-            <Pressable
-              key={m.id}
-              onPress={() => onOpen(m)}
-              accessibilityRole="button"
-              accessibilityLabel={`${title}. ${when}. ${stats}`}
-              accessibilityHint="Abre el partido para cambiarlo o borrarlo"
-              className="flex-row items-center gap-3 rounded-2xl border border-ink-800 bg-ink-900 p-3 active:bg-ink-800/60">
-              <ResultBadge result={r} />
-              <View className="min-w-0 flex-1">
-                <Text className="text-[15px] font-semibold text-ink-100">{title}</Text>
-                <Text className="mt-0.5 text-xs text-ink-400">{when}</Text>
-              </View>
-              <Text className="text-right text-[13px] text-ink-300">{stats}</Text>
-            </Pressable>
+            <View key={m.id} className="flex-row items-center rounded-2xl border border-ink-800 bg-ink-900 pr-1">
+              <Pressable
+                onPress={() => onOpen(m)}
+                accessibilityRole="button"
+                accessibilityLabel={`${title}. ${when}. ${stats}`}
+                accessibilityHint="Abre el partido para cambiarlo"
+                className="min-w-0 flex-1 flex-row items-center gap-3 rounded-2xl p-3 active:bg-ink-800/60">
+                <ResultBadge result={r} />
+                <View className="min-w-0 flex-1">
+                  <Text className="text-[15px] font-semibold text-ink-100">{title}</Text>
+                  <Text className="mt-0.5 text-xs text-ink-400">{when}</Text>
+                </View>
+                <Text className="text-right text-[13px] text-ink-300">{stats}</Text>
+              </Pressable>
+              <TrashButton what={`el partido del ${listDate(m.date, now)}`} onDelete={() => useDb.getState().deleteEntry(m.id)} />
+            </View>
           );
         })
       )}

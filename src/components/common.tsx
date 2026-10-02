@@ -1,7 +1,8 @@
 import { Pressable, Text, View } from 'react-native';
 import type { Subcategory } from '../config/categories';
-import type { Entry } from '../lib/db';
+import { useDb, type Entry } from '../lib/db';
 import { formatValue } from '../lib/stats';
+import TrashButton from './TrashButton';
 
 export const money = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
 
@@ -49,23 +50,27 @@ export function entryText(sub: Subcategory, entry: Entry) {
   return { title: parts[0] ?? sub.name, detail: parts.slice(1).join(' · ') };
 }
 
+/** Un registro: tocarlo abre el formulario; 🗑️ lo borra sin abrirlo (pregunta antes). */
 export function EntryRow({ sub, entry, onPress, showSub }: { sub: Subcategory; entry: Entry; onPress: () => void; showSub?: boolean }) {
   const { title, detail } = entryText(sub, entry);
   return (
-    <Pressable onPress={onPress} className="flex-row items-center gap-3 rounded-xl px-3 py-2.5 active:bg-ink-800/60">
-      <Text className="text-xl">{sub.icon}</Text>
-      <View className="min-w-0 flex-1">
-        <Text numberOfLines={1} className="text-sm font-medium text-ink-100">
-          {showSub && <Text className="text-ink-500">{sub.name} · </Text>}
-          {title}
-        </Text>
-        {!!detail && (
-          <Text numberOfLines={1} className="text-xs text-ink-400">
-            {detail}
+    <View className="flex-row items-center">
+      <Pressable onPress={onPress} className="min-w-0 flex-1 flex-row items-center gap-3 rounded-xl px-3 py-2.5 active:bg-ink-800/60">
+        <Text className="text-xl">{sub.icon}</Text>
+        <View className="min-w-0 flex-1">
+          <Text numberOfLines={1} className="text-sm font-medium text-ink-100">
+            {showSub && <Text className="text-ink-500">{sub.name} · </Text>}
+            {title}
           </Text>
-        )}
-      </View>
-    </Pressable>
+          {!!detail && (
+            <Text numberOfLines={1} className="text-xs text-ink-400">
+              {detail}
+            </Text>
+          )}
+        </View>
+      </Pressable>
+      <TrashButton what={`este registro (${title})`} onDelete={() => useDb.getState().deleteEntry(entry.id)} />
+    </View>
   );
 }
 

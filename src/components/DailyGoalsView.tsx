@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useDb } from '../lib/db';
+import TrashButton from './TrashButton';
 import { formatDay, shiftDay, today } from '../lib/dates';
 import { computeStreak } from '../lib/streak';
 import { useThemeColors } from '../lib/theme';
@@ -30,13 +31,6 @@ export default function DailyGoalsView() {
     if (!title.trim()) return;
     addDailyGoal(title);
     setTitle('');
-  };
-
-  const remove = (id: string, name: string) => {
-    Alert.alert(`¿Borrar la meta "${name}"?`, 'Se pierde su historial de rachas.', [
-      { text: 'Cancelar', style: 'cancel' },
-      { text: 'Borrar', style: 'destructive', onPress: () => archiveDailyGoal(id) },
-    ]);
   };
 
   return (
@@ -84,9 +78,11 @@ export default function DailyGoalsView() {
                       <Text className="text-[11px] font-medium text-gold-300">🔥{streak}</Text>
                     </View>
                   )}
-                  <Pressable onPress={() => remove(g.id, g.title)} className="px-2 py-1" accessibilityLabel="Borrar meta">
-                    <Text className="text-ink-500">✕</Text>
-                  </Pressable>
+                  <TrashButton
+                    what={`la meta "${g.title}"`}
+                    detail="Deja de aparecer desde hoy. Lo que ya marcaste sigue en la grilla de Hoy."
+                    onDelete={() => archiveDailyGoal(g.id)}
+                  />
                 </View>
               );
             })}

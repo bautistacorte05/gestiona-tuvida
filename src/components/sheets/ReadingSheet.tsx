@@ -16,13 +16,20 @@ import {
   readingPace,
   shortAuthor,
   stars,
+  uniqueBooks,
   type BookState,
 } from '../../lib/reading';
+import { confirm } from '../../lib/confirm';
 import { markDone } from '../../lib/sheets';
 import { computeStreak } from '../../lib/streak';
 import { useThemeColors } from '../../lib/theme';
 import EntryForm from '../EntryForm';
+import TrashButton from '../TrashButton';
 import { Chip, Hero, PrimaryButton, Section, SheetScreen, SmallButton, StatTile } from './kit';
+
+// Borrar un libro no borra las páginas ya anotadas de ese libro (siguen contando en el mes).
+const deleteBook = (b: Entry) => useDb.getState().deleteEntry(b.id);
+const BOOK_DELETE_DETAIL = 'Las páginas que ya anotaste de ese libro quedan guardadas. No se puede deshacer.';
 
 /**
  * Hoja de Lectura: el libro que estás leyendo (anotar páginas con un toque), cuánto leíste,
@@ -78,7 +85,8 @@ export default function ReadingSheet() {
 
   const books = useMemo(() => entries.filter((e) => e.categoryId === 'lectura' && e.subId === 'libros'), [entries]);
   const sessions = useMemo(() => entries.filter((e) => e.categoryId === 'lectura' && e.subId === 'sesiones'), [entries]);
-  const reading = useMemo(() => booksIn(books, 'Leyendo'), [books]);
+  // Un mismo libro cargado dos veces se muestra una sola vez; las copias se ofrecen borrar.
+  const { unique: reading, copies: readingCopies } = useMemo(() => uniqueBooks(booksIn(books, 'Leyendo')), [books]);
   const toRead = useMemo(() => booksIn(books, 'Pendiente'), [books]);
   const finished = useMemo(() => booksIn(books, 'Terminado'), [books]);
   const abandoned = useMemo(() => booksIn(books, 'Abandonado'), [books]);
@@ -90,6 +98,19 @@ export default function ReadingSheet() {
   const history = useMemo(() => [...sessions].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt), [sessions]);
 
   const current = reading.find((b) => b.id === currentId) ?? reading[0];
+  const currentCopies = current ? readingCopies.filter((b) => bookKey(b.values.titulo) === bookKey(current.values.titulo)) : [];
+
+  /** Deja una sola copia del libro (la que se ve). Las páginas anotadas siguen unidas por el nombre. */
+  const removeCopies = async () => {
+    if (!current || !currentCopies.length) return;
+    const n = currentCopies.length;
+    const ok = await confirm(
+      `¿Dejar un solo "${titleOf(current)}"?`,
+      `Se ${n === 1 ? 'borra la copia repetida' : `borran las ${n} copias repetidas`}. Las páginas que anotaste no se pierden.`,
+      'Dejar uno solo',
+    );
+    if (ok) for (const b of currentCopies) deleteBook(b);
+  };
 
   const setState = (book: Entry, estado: BookState) =>
     saveEntry({ id: book.id, categoryId: book.categoryId, subId: book.subId, date: book.date, values: { ...book.values, estado } });
@@ -135,6 +156,8 @@ export default function ReadingSheet() {
         <ReadingNow
           book={current}
           others={reading}
+          copies={currentCopies.length}
+          onRemoveCopies={removeCopies}
           read={pagesRead.get(bookKey(current.values.titulo)) ?? 0}
           pace={pace}
           flash={flash}
@@ -192,6 +215,8 @@ export default function ReadingSheet() {
 function ReadingNow({
   book,
   others,
+  copies,
+  onRemoveCopies,
   read,
   pace,
   flash,
@@ -202,6 +227,9 @@ function ReadingNow({
 }: {
   book: Entry;
   others: Entry[];
+  /** Cuántas veces más está cargado este mismo libro (0 = ninguna). */
+  copies: number;
+  onRemoveCopies: () => void;
   read: number;
   pace: number | undefined;
   flash: string | null;
@@ -237,14 +265,21 @@ function ReadingNow({
         </View>
       )}
 
+      {copies > 0 && (
+        <View className="flex-row flex-wrap items-center justify-between gap-2 rounded-xl border border-ink-700 bg-ink-950 px-3 py-2">
+          <Text className="flex-1 text-[13px] text-ink-300">Este libro está cargado {copies + 1} veces.</Text>
+          <SmallButton label="Dejar uno solo" onPress={onRemoveCopies} accessibilityLabel={`Dejar un solo ${title}`} />
+        </View>
+      )}
+
       <View className="flex-row gap-3.5">
         <Pressable onPress={onEdit} accessibilityRole="button" accessibilityLabel={`Ver o editar ${title}`} style={{ width: 86 }}>
-          <BookCover title={title} author={author} height={124} titleSize={15} />
+          <BookCover title={title} author={author} height={124} titleSize={15} plain />
         </Pressable>
         <View className="min-w-0 flex-1 gap-2">
           <View>
-            <Text className="text-lg font-bold text-ink-100">{title}</Text>
-            {!!author && <Text className="text-[13px] text-ink-400">{author}</Text>}
+            <Text className="text-xl font-bold text-ink-100">{title}</Text>
+            {!!author && <Text className="text-sm text-ink-400">{author}</Text>}
           </View>
           {total > 0 ? (
             <>
@@ -362,12 +397,22 @@ function StartReading({ toRead, onStart, onAdd }: { toRead: Entry[]; onStart: (b
 }
 
 /** Tapa armada con el título y el autor: gris neutro con el lomo del color de la app. */
-function BookCover({ title, author, height, titleSize }: { title: string; author: string; height: number; titleSize: number }) {
+/** Tapa dibujada. `plain`: sin texto (en "Leyendo ahora" el título ya está al lado, no se repite). */
+function BookCover({ title, author, height, titleSize, plain }: { title: string; author: string; height: number; titleSize: number; plain?: boolean }) {
   const short = shortAuthor(author);
+  const shape = { height, borderTopLeftRadius: 6, borderBottomLeftRadius: 6, borderTopRightRadius: 10, borderBottomRightRadius: 10 };
+  if (plain) {
+    return (
+      <View className="flex-row overflow-hidden bg-ink-800" style={shape}>
+        <View className="w-1.5 bg-shu-600" />
+        <View className="flex-1 items-center justify-center">
+          <Text className="text-3xl opacity-70">📖</Text>
+        </View>
+      </View>
+    );
+  }
   return (
-    <View
-      className="flex-row overflow-hidden bg-ink-800"
-      style={{ height, borderTopLeftRadius: 6, borderBottomLeftRadius: 6, borderTopRightRadius: 10, borderBottomRightRadius: 10 }}>
+    <View className="flex-row overflow-hidden bg-ink-800" style={shape}>
       <View className="w-1.5 bg-shu-600" />
       <View className="min-w-0 flex-1 justify-between px-2 py-2.5">
         <Text numberOfLines={5} className="font-bold text-ink-100" style={{ fontFamily: SERIF, fontSize: titleSize, lineHeight: Math.round(titleSize * 1.15) }}>
@@ -405,7 +450,12 @@ function ToReadSection({ books, onOpen, onStart, onAdd }: { books: Entry[]; onOp
                   <Pressable onPress={() => onOpen(b)} accessibilityRole="button" accessibilityLabel={`Ver o editar ${titleOf(b)}`}>
                     <BookCover title={titleOf(b)} author={authorOf(b)} height={138} titleSize={14} />
                   </Pressable>
-                  <SmallButton label="Empezar" onPress={() => onStart(b)} accessibilityLabel={`Empezar ${titleOf(b)}`} />
+                  <View className="flex-row items-center">
+                    <View className="flex-1">
+                      <SmallButton label="Empezar" onPress={() => onStart(b)} accessibilityLabel={`Empezar ${titleOf(b)}`} />
+                    </View>
+                    <TrashButton what={`el libro "${titleOf(b)}"`} detail={BOOK_DELETE_DETAIL} onDelete={() => deleteBook(b)} />
+                  </View>
                 </View>
               ))}
               {Array.from({ length: cols - row.length }, (_, k) => (
@@ -450,23 +500,26 @@ function FinishedRow({ book, first, onPress }: { book: Entry; first: boolean; on
   const author = authorOf(book);
   const st = stars(book.values.puntaje);
   return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={[title, author && `de ${author}`, st?.label].filter(Boolean).join(', ')}
-      className={`flex-row items-center justify-between gap-3 py-3 active:opacity-70 ${first ? '' : 'border-t border-ink-800'}`}>
-      <View className="min-w-0 flex-1">
-        <Text numberOfLines={1} className="text-[15px] font-semibold text-ink-100">
-          {title}
-        </Text>
-        {!!author && (
-          <Text numberOfLines={1} className="mt-0.5 text-xs text-ink-400">
-            {author}
+    <View className={`flex-row items-center ${first ? '' : 'border-t border-ink-800'}`}>
+      <Pressable
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel={[title, author && `de ${author}`, st?.label].filter(Boolean).join(', ')}
+        className="min-w-0 flex-1 flex-row items-center justify-between gap-3 py-3 pr-1 active:opacity-70">
+        <View className="min-w-0 flex-1">
+          <Text numberOfLines={1} className="text-[15px] font-semibold text-ink-100">
+            {title}
           </Text>
-        )}
-      </View>
-      {!!st && <Text className="text-[15px] tracking-widest text-shu-300">{st.text}</Text>}
-    </Pressable>
+          {!!author && (
+            <Text numberOfLines={1} className="mt-0.5 text-xs text-ink-400">
+              {author}
+            </Text>
+          )}
+        </View>
+        {!!st && <Text className="text-[15px] tracking-widest text-shu-300">{st.text}</Text>}
+      </Pressable>
+      <TrashButton what={`el libro "${title}"`} detail={BOOK_DELETE_DETAIL} onDelete={() => deleteBook(book)} />
+    </View>
   );
 }
 
@@ -477,23 +530,26 @@ function SessionRow({ session, now, first, onPress }: { session: Entry; now: str
   const when = session.date === now ? 'Hoy' : formatDay(session.date, { weekday: 'short', day: 'numeric', month: 'short' });
   const main = [pages > 0 && plural(pages, 'página', 'páginas'), minutes > 0 && formatDuration(minutes)].filter(Boolean).join(' · ') || 'Sin páginas';
   return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={`${when}: ${main}${book ? `, ${book}` : ''}. Tocá para editar.`}
-      className={`flex-row items-center gap-3 py-3 active:opacity-70 ${first ? '' : 'border-t border-ink-800'}`}>
-      <View className="min-w-0 flex-1">
-        <Text numberOfLines={1} className="text-[15px] font-semibold text-ink-100">
-          {main}
-        </Text>
-        {!!book && (
-          <Text numberOfLines={1} className="mt-0.5 text-xs text-ink-400">
-            {book}
+    <View className={`flex-row items-center ${first ? '' : 'border-t border-ink-800'}`}>
+      <Pressable
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel={`${when}: ${main}${book ? `, ${book}` : ''}. Tocá para editar.`}
+        className="min-w-0 flex-1 flex-row items-center gap-3 py-3 pr-1 active:opacity-70">
+        <View className="min-w-0 flex-1">
+          <Text numberOfLines={1} className="text-[15px] font-semibold text-ink-100">
+            {main}
           </Text>
-        )}
-      </View>
-      <Text className="text-xs text-ink-500">{when}</Text>
-    </Pressable>
+          {!!book && (
+            <Text numberOfLines={1} className="mt-0.5 text-xs text-ink-400">
+              {book}
+            </Text>
+          )}
+        </View>
+        <Text className="text-xs text-ink-500">{when}</Text>
+      </Pressable>
+      <TrashButton what={`la lectura de ${when === 'Hoy' ? 'hoy' : `el ${when}`} (${main})`} onDelete={() => useDb.getState().deleteEntry(session.id)} />
+    </View>
   );
 }
 

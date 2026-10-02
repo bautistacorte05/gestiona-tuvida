@@ -15,12 +15,27 @@ export const numOf = (v: unknown) => {
   return Number.isFinite(n) ? n : 0
 }
 
-/** Clave para unir sesiones con su libro: sin espacios de los costados y sin mayúsculas. */
-export const bookKey = (title: unknown) => String(title ?? '').trim().toLowerCase()
+/** Clave para unir sesiones con su libro: sin espacios de más y sin mayúsculas. */
+export const bookKey = (title: unknown) => String(title ?? '').trim().replace(/\s+/g, ' ').toLowerCase()
 
 /** Libros en un estado, el último modificado primero. */
 export function booksIn(books: Entry[], state: BookState) {
   return books.filter((b) => b.values.estado === state).sort((a, b) => b.updatedAt - a.updatedAt)
+}
+
+/**
+ * Un libro por título (sin importar mayúsculas ni espacios): si se cargó dos veces, queda el
+ * primero de la lista (el último modificado) y los demás van a `copies`, para ofrecer borrarlos.
+ */
+export function uniqueBooks(books: Entry[]) {
+  const seen = new Map<string, Entry>()
+  const copies: Entry[] = []
+  for (const b of books) {
+    const k = bookKey(b.values.titulo)
+    if (seen.has(k)) copies.push(b)
+    else seen.set(k, b)
+  }
+  return { unique: [...seen.values()], copies }
 }
 
 /** Páginas leídas de cada libro (suma de sus sesiones), por clave de título. */

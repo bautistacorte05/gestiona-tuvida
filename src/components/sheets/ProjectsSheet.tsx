@@ -8,7 +8,10 @@ import { deadlineInfo, deadlineOf, nextDue, projectsIn, type Plazo, type Project
 import { useThemeColors } from '../../lib/theme';
 import { Empty } from '../common';
 import EntryForm from '../EntryForm';
+import TrashButton from '../TrashButton';
 import { Choice, Hero, PrimaryButton, Section, Segmented, SheetScreen, SmallButton } from './kit';
+
+const deleteProject = (p: Entry) => useDb.getState().deleteEntry(p.id);
 
 /**
  * Hoja de Proyectos: lo próximo que vence, los proyectos en curso con sus acciones, los pendientes,
@@ -238,17 +241,22 @@ function ActiveProject({
   const info = deadlineInfo(deadlineOf(project), now);
   return (
     <View className={`gap-2.5 ${first ? '' : 'border-t border-ink-800 pt-3'}`}>
-      <Pressable onPress={onOpen} accessibilityRole="button" accessibilityLabel={`${name}. Tocá para ver o editar.`} className="gap-1.5 active:opacity-70">
-        <View className="flex-row items-start justify-between gap-2.5">
-          <Text className="min-w-0 flex-1 text-base font-bold text-ink-100">{name}</Text>
-          <PlazoBadge plazo={plazoOf(project)} />
+      <View className="flex-row items-start">
+        <Pressable onPress={onOpen} accessibilityRole="button" accessibilityLabel={`${name}. Tocá para ver o editar.`} className="min-w-0 flex-1 gap-1.5 active:opacity-70">
+          <View className="flex-row items-start justify-between gap-2.5">
+            <Text className="min-w-0 flex-1 text-base font-bold text-ink-100">{name}</Text>
+            <PlazoBadge plazo={plazoOf(project)} />
+          </View>
+          {!!nota && (
+            <Text numberOfLines={2} className="text-[13px] text-ink-400">
+              {nota}
+            </Text>
+          )}
+        </Pressable>
+        <View className="-mr-2 -mt-2.5">
+          <TrashButton what={`el proyecto "${name}"`} onDelete={() => deleteProject(project)} />
         </View>
-        {!!nota && (
-          <Text numberOfLines={2} className="text-[13px] text-ink-400">
-            {nota}
-          </Text>
-        )}
-      </Pressable>
+      </View>
       <View className="flex-row flex-wrap items-center justify-between gap-2.5">
         <Text className={`text-[13px] ${info.urgent ? 'font-semibold text-gold-400' : 'text-ink-400'}`}>{info.text}</Text>
         <View className="flex-row gap-2">
@@ -293,6 +301,7 @@ function ProjectRow({
         )}
       </Pressable>
       <SmallButton label={action.label} onPress={action.onPress} accessibilityLabel={`${action.label} ${name}`} />
+      <TrashButton what={`el proyecto "${name}"`} onDelete={() => deleteProject(project)} />
     </View>
   );
 }

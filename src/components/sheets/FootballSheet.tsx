@@ -9,9 +9,9 @@ import { FootballHero, FootballMatches, FootballQuickLog, FootballStats } from '
 import { SheetScreen } from './kit';
 
 /**
- * Hoja de Fútbol: resumen del año (‹ año › para ver otros), goles y asistencias, cargar un
- * partido y la lista de partidos de ese año. Fútbol no es un hábito diario: cargar un partido no
- * tilda nada en Hoy.
+ * Hoja de Fútbol: primero cargar un partido y después los resultados: resumen del año (‹ año ›
+ * para ver otros), goles y asistencias y la lista de partidos de ese año. Fútbol no es un hábito
+ * diario: cargar un partido no tilda nada en Hoy.
  */
 export default function FootballSheet() {
   const found = useFindSub('futbol', 'partidos');
@@ -34,10 +34,10 @@ export default function FootballSheet() {
     <SheetScreen
       categoryId="futbol"
       overlay={editing ? <EntryForm category={found.category} sub={found.sub} entry={editing.entry} defaultDate={now} onClose={() => setEditing(null)} /> : null}>
-      <FootballHero year={year} isCurrent={isCurrent} bounds={bounds} onYear={setYear} summary={summary} matches={matches} />
-      <FootballStats summary={summary} />
       {/* El partido se guarda con la fecha de hoy: se vuelve a este año para verlo en la lista. */}
       <FootballQuickLog formats={formats} onSaved={() => setYear(currentYear)} />
+      <FootballHero year={year} isCurrent={isCurrent} bounds={bounds} onYear={setYear} summary={summary} matches={matches} />
+      <FootballStats summary={summary} />
       <FootballMatches
         key={year}
         matches={matches}

@@ -20,6 +20,7 @@ import {
 } from '../../lib/wellbeing';
 import EntryForm from '../EntryForm';
 import TimeField from '../TimeField';
+import TrashButton from '../TrashButton';
 import { Chip, Hero, NumberStepper, PrimaryButton, Section, SheetScreen, SmallButton } from './kit';
 
 /**
@@ -354,25 +355,29 @@ function HistoryRow({ entry, now, first, onPress }: { entry: Entry; now: string;
     main = [h !== undefined ? formatSleep(h) : 'Sueño', String(entry.values.calidad ?? '')].filter(Boolean).join(' · ');
     detail = from && to ? timeRange(from, to) : from ? `Me acosté ${shortTime(from)}` : to ? `Me levanté ${shortTime(to)}` : '';
   }
+  const what = entry.subId === 'animo' ? 'el ánimo' : 'el sueño';
   return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={`${when}: ${main}${detail ? `, ${detail}` : ''}. Tocá para editar.`}
-      className={`flex-row items-center gap-3 py-3 active:opacity-70 ${first ? '' : 'border-t border-ink-800'}`}>
-      <Text className="text-xl">{icon}</Text>
-      <View className="min-w-0 flex-1">
-        <Text numberOfLines={1} className="text-[15px] font-semibold text-ink-100">
-          {main}
-        </Text>
-        {!!detail && (
-          <Text numberOfLines={1} className="mt-0.5 text-xs text-ink-400">
-            {detail}
+    <View className={`flex-row items-center ${first ? '' : 'border-t border-ink-800'}`}>
+      <Pressable
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel={`${when}: ${main}${detail ? `, ${detail}` : ''}. Tocá para editar.`}
+        className="min-w-0 flex-1 flex-row items-center gap-3 py-3 pr-1 active:opacity-70">
+        <Text className="text-xl">{icon}</Text>
+        <View className="min-w-0 flex-1">
+          <Text numberOfLines={1} className="text-[15px] font-semibold text-ink-100">
+            {main}
           </Text>
-        )}
-      </View>
-      <Text className="text-xs text-ink-500">{when}</Text>
-    </Pressable>
+          {!!detail && (
+            <Text numberOfLines={1} className="mt-0.5 text-xs text-ink-400">
+              {detail}
+            </Text>
+          )}
+        </View>
+        <Text className="text-xs text-ink-500">{when}</Text>
+      </Pressable>
+      <TrashButton what={`${what} de ${when === 'Hoy' || when === 'Ayer' ? when.toLowerCase() : `el ${when}`}`} onDelete={() => useDb.getState().deleteEntry(entry.id)} />
+    </View>
   );
 }
 

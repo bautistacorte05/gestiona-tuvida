@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useDb } from '../lib/db';
+import TrashButton from './TrashButton';
 import { goToSub } from '../lib/nav';
 import { useThemeColors } from '../lib/theme';
 import { Empty } from './common';
@@ -37,13 +38,6 @@ export default function PetTrainingView() {
     if (!nombre.trim() || !activePetId) return;
     addPetCommand(activePetId, nombre);
     setNombre('');
-  };
-
-  const remove = (id: string, name: string) => {
-    Alert.alert(`¿Borrar el comando "${name}"?`, undefined, [
-      { text: 'Cancelar', style: 'cancel' },
-      { text: 'Borrar', style: 'destructive', onPress: () => archivePetCommand(id) },
-    ]);
   };
 
   return (
@@ -96,9 +90,7 @@ export default function PetTrainingView() {
                   <View key={c.id} className="rounded-2xl border border-ink-800 bg-ink-900 p-4">
                     <View className="mb-2 flex-row items-center justify-between">
                       <Text className="font-medium text-ink-100">{c.nombre}</Text>
-                      <Pressable onPress={() => remove(c.id, c.nombre)} className="px-2 py-1" accessibilityLabel="Borrar comando">
-                        <Text className="text-ink-500">✕</Text>
-                      </Pressable>
+                      <TrashButton what={`el comando "${c.nombre}"`} onDelete={() => archivePetCommand(c.id)} />
                     </View>
                     <View className="flex-row items-center gap-3">
                       <View className="flex-1 flex-row gap-1">

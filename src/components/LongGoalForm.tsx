@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { confirm, notify } from '../lib/confirm';
 import { useDb, type LongGoal } from '../lib/db';
 import { useThemeColors } from '../lib/theme';
 import { parseNum } from './ItemsEditor';
@@ -18,7 +19,7 @@ export default function LongGoalForm({ goal, onClose }: { goal?: LongGoal; onClo
 
   const submit = () => {
     if (!title.trim() || !target.trim()) {
-      Alert.alert('Falta un dato', 'Completá el nombre de la meta y el objetivo.');
+      notify('Falta un dato', 'Completá el nombre de la meta y el objetivo.');
       return;
     }
     const data = { title: title.trim(), unit: unit.trim() || '', target: parseNum(target) || 0, current: parseNum(current) || 0, deadline: deadline || undefined };
@@ -27,19 +28,11 @@ export default function LongGoalForm({ goal, onClose }: { goal?: LongGoal; onClo
     onClose();
   };
 
-  const remove = () => {
+  const remove = async () => {
     if (!goal) return;
-    Alert.alert(`¿Borrar la meta "${goal.title}"?`, undefined, [
-      { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Borrar',
-        style: 'destructive',
-        onPress: () => {
-          archiveLongGoal(goal.id);
-          onClose();
-        },
-      },
-    ]);
+    if (!(await confirm(`¿Borrar la meta "${goal.title}"?`, 'No se puede deshacer.', 'Borrar'))) return;
+    archiveLongGoal(goal.id);
+    onClose();
   };
 
   return (

@@ -1,10 +1,11 @@
 import * as Sharing from 'expo-sharing';
 import { useRef, useState } from 'react';
-import { Alert, Image, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Image, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { captureRef } from 'react-native-view-shot';
 
 import { TRAINING_CATEGORIES, type TrainingCategory } from '../config/training';
+import { confirm, notify } from '../lib/confirm';
 import { useDb, type PetProfile } from '../lib/db';
 import { formatDay, today } from '../lib/dates';
 import { pickAndResizeImage } from '../lib/image';
@@ -75,18 +76,17 @@ function PetProfileForm({ profile }: { profile?: PetProfile }) {
     setEditing(false);
   };
 
-  const removePet = () => {
+  const removePet = async () => {
     if (!profile) return;
-    Alert.alert(`¿Borrar a "${profile.nombre || 'esta mascota'}"?`, 'Se borra el perfil, no los paseos ni registros ya cargados.', [
-      { text: 'Cancelar', style: 'cancel' },
-      { text: 'Borrar', style: 'destructive', onPress: () => archivePetProfile(profile.id) },
-    ]);
+    if (await confirm(`¿Borrar a "${profile.nombre || 'esta mascota'}"?`, 'Se borra el perfil, no los paseos ni registros ya cargados.', 'Borrar')) {
+      archivePetProfile(profile.id);
+    }
   };
 
   const save = () => {
     if (!profile) return;
     if (!nombre.trim()) {
-      Alert.alert('Falta un dato', 'Completá al menos el nombre.');
+      notify('Falta un dato', 'Completá al menos el nombre.');
       return;
     }
     updatePetProfile(profile.id, {
@@ -106,9 +106,9 @@ function PetProfileForm({ profile }: { profile?: PetProfile }) {
     try {
       const uri = await captureRef(cardRef, { format: 'png', quality: 1 });
       if (await Sharing.isAvailableAsync()) await Sharing.shareAsync(uri, { mimeType: 'image/png' });
-      else Alert.alert('No se pudo compartir', 'Este dispositivo no tiene la función de compartir disponible.');
+      else notify('No se pudo compartir', 'Este dispositivo no tiene la función de compartir disponible.');
     } catch {
-      Alert.alert('No se pudo generar la imagen');
+      notify('No se pudo generar la imagen');
     }
     setBusy(false);
   };

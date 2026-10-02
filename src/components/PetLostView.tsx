@@ -1,9 +1,10 @@
 import * as Sharing from 'expo-sharing';
 import { useRef, useState } from 'react';
-import { Alert, Image, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Image, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { captureRef } from 'react-native-view-shot';
 
+import { notify } from '../lib/confirm';
 import { useDb } from '../lib/db';
 import { formatDay, today } from '../lib/dates';
 import { goToSub } from '../lib/nav';
@@ -37,9 +38,9 @@ export default function PetLostView() {
     try {
       const uri = await captureRef(posterRef, { format: 'png', quality: 1 });
       if (await Sharing.isAvailableAsync()) await Sharing.shareAsync(uri, { mimeType: 'image/png' });
-      else Alert.alert('No se pudo compartir', 'Este dispositivo no tiene la función de compartir disponible.');
+      else notify('No se pudo compartir', 'Este dispositivo no tiene la función de compartir disponible.');
     } catch {
-      Alert.alert('No se pudo generar la imagen');
+      notify('No se pudo generar la imagen');
     }
     setBusy(false);
   };

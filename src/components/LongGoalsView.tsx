@@ -6,6 +6,7 @@ import { useDb, type LongGoal } from '../lib/db';
 import { today } from '../lib/dates';
 import { Empty } from './common';
 import LongGoalForm from './LongGoalForm';
+import TrashButton from './TrashButton';
 import BackButton from './BackButton';
 import ScreenTitle from './ScreenTitle';
 
@@ -54,6 +55,9 @@ export default function LongGoalsView() {
                         <Text className="text-xs font-medium text-moss-300">Cumplida</Text>
                       </View>
                     )}
+                    <View className="-my-2.5 -mr-2.5">
+                      <TrashButton what={`la meta "${g.title}"`} onDelete={() => useDb.getState().archiveLongGoal(g.id)} />
+                    </View>
                   </View>
                   <View className="h-2 overflow-hidden rounded-full bg-ink-800">
                     <View className={`h-full rounded-full ${done ? 'bg-moss-500' : 'bg-gold-500'}`} style={{ width: `${pct}%` }} />

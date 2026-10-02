@@ -6,6 +6,7 @@ import { useDb, type DayTask, type FixedTask } from '../lib/db';
 import { useThemeColors } from '../lib/theme';
 import { CheckSquare } from './HabitPanel';
 import TimeField from './TimeField';
+import TrashButton from './TrashButton';
 
 const WEEKDAYS = [
   { day: 1, label: 'L' },
@@ -86,11 +87,12 @@ function Row({ item }: { item: Item }) {
         <Text className={`mr-2 text-base ${item.done ? 'text-ink-500 line-through' : 'text-ink-100'}`}>{item.title}</Text>
         {!!item.badge && <Text className="text-xs text-ink-400">{item.badge}</Text>}
       </Pressable>
-      {item.remove && (
-        <Pressable onPress={item.remove} accessibilityLabel={item.badge === '🔁' ? 'Dejar de repetir' : 'Borrar tarea'} className="h-8 w-8 items-center justify-center">
-          <Text className="text-ink-500">✕</Text>
-        </Pressable>
-      )}
+      {!!item.remove &&
+        (item.badge === '🔁' ? (
+          <TrashButton what={`la tarea fija "${item.title}"`} detail="Deja de aparecer desde este día. Los días anteriores quedan como estaban." onDelete={item.remove} />
+        ) : (
+          <TrashButton what={`la tarea "${item.title}"`} onDelete={item.remove} />
+        ))}
     </View>
   );
 }

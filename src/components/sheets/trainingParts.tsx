@@ -9,6 +9,7 @@ import { formatValue, tagsOf } from '../../lib/stats';
 import { useThemeColors } from '../../lib/theme';
 import { dayState, groupHint, joinNames, listDate, shortMinutes, weekLabel, type DayState, type GroupStat } from '../../lib/training';
 import { parseNum } from '../ItemsEditor';
+import TrashButton from '../TrashButton';
 import { BigStat, Chip, Choice, Hero, PrimaryButton, Section, SmallButton } from './kit';
 
 /** Piezas de la hoja de Entrenamiento (ver TrainingSheet). Todo el color sale del color de la app. */
@@ -308,23 +309,25 @@ export function TrainingRecent({
             const hasMinutes = e.values.minutos !== undefined && e.values.minutos !== '';
             const hasIntensity = e.values.intensidad !== undefined && e.values.intensidad !== '';
             return (
-              <Pressable
-                key={e.id}
-                onPress={() => onOpen(e)}
-                accessibilityRole="button"
-                accessibilityHint="Abre el registro para cambiarlo o borrarlo"
-                className={`flex-row justify-between gap-3 px-4 py-3.5 active:bg-ink-800/60 ${i < list.length - 1 ? 'border-b border-ink-800' : ''}`}>
-                <View className="min-w-0 flex-1">
-                  <Text className="text-[15px] font-semibold text-ink-100">{title}</Text>
-                  <Text className="mt-0.5 text-xs text-ink-400">{listDate(e.date, now)}</Text>
-                </View>
-                <View className="items-end">
-                  {hasMinutes && !!minutosField && <Text className="text-[15px] font-bold text-ink-100">{formatValue(minutosField, e.values.minutos)}</Text>}
-                  {hasIntensity && !!intensityField && (
-                    <Text className="mt-0.5 text-xs text-shu-300">intensidad {formatValue(intensityField, e.values.intensidad)}</Text>
-                  )}
-                </View>
-              </Pressable>
+              <View key={e.id} className={`flex-row items-center pr-1 ${i < list.length - 1 ? 'border-b border-ink-800' : ''}`}>
+                <Pressable
+                  onPress={() => onOpen(e)}
+                  accessibilityRole="button"
+                  accessibilityHint="Abre el registro para cambiarlo"
+                  className="min-w-0 flex-1 flex-row justify-between gap-3 py-3.5 pl-4 pr-2 active:bg-ink-800/60">
+                  <View className="min-w-0 flex-1">
+                    <Text className="text-[15px] font-semibold text-ink-100">{title}</Text>
+                    <Text className="mt-0.5 text-xs text-ink-400">{listDate(e.date, now)}</Text>
+                  </View>
+                  <View className="items-end">
+                    {hasMinutes && !!minutosField && <Text className="text-[15px] font-bold text-ink-100">{formatValue(minutosField, e.values.minutos)}</Text>}
+                    {hasIntensity && !!intensityField && (
+                      <Text className="mt-0.5 text-xs text-shu-300">intensidad {formatValue(intensityField, e.values.intensidad)}</Text>
+                    )}
+                  </View>
+                </Pressable>
+                <TrashButton what={`el entrenamiento (${title}, ${listDate(e.date, now)})`} onDelete={() => useDb.getState().deleteEntry(e.id)} />
+              </View>
             );
           })}
         </View>

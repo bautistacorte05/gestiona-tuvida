@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import type { Category, Subcategory } from '../config/categories';
+import { confirm, notify } from '../lib/confirm';
 import { PET_OWNED_SUBS, useDb, type Entry } from '../lib/db';
 import { today } from '../lib/dates';
 import { itemsTotal } from '../lib/prices';
@@ -26,6 +27,7 @@ export default function EntryForm({ category, sub, entry, defaultDate, onClose }
   const needsPet = category.id === 'mascota' && PET_OWNED_SUBS.includes(sub.id);
   const petId = needsPet ? (entry?.petId ?? activePetId) : undefined;
   const [date, setDate] = useState(entry?.date ?? defaultDate ?? today());
+  const saved = useRef(false);
   const [values, setValues] = useState<Record<string, string | string[]>>(() =>
     Object.fromEntries(
       sub.fields.map((f) => {
@@ -45,8 +47,10 @@ export default function EntryForm({ category, sub, entry, defaultDate, onClose }
   const totalField = sub.fields.find((f) => f.money);
 
   const submit = () => {
+    // Un doble toque en "Guardar" no tiene que crear el registro dos veces.
+    if (saved.current) return;
     if (needsPet && !petId) {
-      Alert.alert('Falta un dato', 'Primero elegí (o agregá) una mascota en Perfil / DNI.');
+      notify('Falta un dato', 'Primero elegí (o agregá) una mascota en Perfil / DNI.');
       return;
     }
     for (const f of sub.fields) {
@@ -56,7 +60,7 @@ export default function EntryForm({ category, sub, entry, defaultDate, onClose }
       // El Total se puede dejar vacío si hay productos cargados: se completa solo con la suma.
       if (empty && f === totalField && autoTotal !== undefined) continue;
       if (empty) {
-        Alert.alert('Falta un dato', `Completá "${f.label}" para guardar.`);
+        notify('Falta un dato', `Completá "${f.label}" para guardar.`);
         return;
       }
     }
@@ -76,23 +80,16 @@ export default function EntryForm({ category, sub, entry, defaultDate, onClose }
       }
       clean[f.key] = f.type === 'number' ? parseNum(v) : v;
     }
+    saved.current = true;
     saveEntry({ id: entry?.id, categoryId: category.id, subId: sub.id, date, values: clean, items: sub.itemized ? parsedItems : undefined, petId });
     onClose();
   };
 
-  const remove = () => {
+  const remove = async () => {
     if (!entry) return;
-    Alert.alert('¿Borrar este registro?', undefined, [
-      { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Borrar',
-        style: 'destructive',
-        onPress: () => {
-          deleteEntry(entry.id);
-          onClose();
-        },
-      },
-    ]);
+    if (!(await confirm('¿Borrar este registro?', 'No se puede deshacer.', 'Borrar'))) return;
+    deleteEntry(entry.id);
+    onClose();
   };
 
   return (
