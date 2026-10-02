@@ -7,6 +7,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { distanceKm } from './geo';
+import { currentAccentColor } from './theme';
 
 /**
  * Rastreo del paseo en vivo, también con la pantalla bloqueada.
@@ -88,7 +89,7 @@ async function startUpdates() {
       foregroundService: {
         notificationTitle: '🐾 Paseo en curso',
         notificationBody: 'Registrando el recorrido. Tocá para ver el mapa.',
-        notificationColor: '#bf3b2e',
+        notificationColor: currentAccentColor(),
       },
     });
   } else {

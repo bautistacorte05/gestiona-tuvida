@@ -5,6 +5,7 @@ import { useDb, type Entry } from '../lib/db';
 import { formatMonth, monthRange, shiftMonth } from '../lib/dates';
 import { comparePrices, pctChange } from '../lib/prices';
 import { tagsOf } from '../lib/stats';
+import { useThemeColors } from '../lib/theme';
 import { money, PctBadge } from './common';
 
 interface Props {
@@ -16,6 +17,7 @@ interface Props {
 
 /** Comparación de gastos contra el mes anterior: total, por categoría y precio de cada producto. */
 export default function ExpenseInsights({ sub, entries, prevEntries, prevMonth }: Props) {
+  const c = useThemeColors();
   const [query, setQuery] = useState('');
   const totalKey = sub.fields.find((f) => f.money)?.key ?? 'monto';
   const groupKey = sub.fields.find((f) => f.type === 'select')?.key ?? 'rubro';
@@ -63,7 +65,7 @@ export default function ExpenseInsights({ sub, entries, prevEntries, prevMonth }
 
   return (
     <View className="gap-5">
-      <View className="rounded-xl border border-ink-800 bg-ink-900/60 p-4">
+      <View className="rounded-2xl border border-ink-800 bg-ink-900 p-4">
         <Text className="mb-3 text-sm text-ink-400">💰 Balance del mes</Text>
         <View className="flex-row justify-between">
           <View>
@@ -84,7 +86,7 @@ export default function ExpenseInsights({ sub, entries, prevEntries, prevMonth }
         </View>
       </View>
 
-      <View className="rounded-xl border border-ink-800 bg-ink-900/60 p-4">
+      <View className="rounded-2xl border border-ink-800 bg-ink-900 p-4">
         <Text className="mb-3 text-sm text-ink-400">Comparado con {prevLabel}</Text>
         <View className="flex-row gap-3">
           <View className="flex-1">
@@ -104,7 +106,7 @@ export default function ExpenseInsights({ sub, entries, prevEntries, prevMonth }
       </View>
 
       {byGroup.length > 0 && (
-        <View className="rounded-xl border border-ink-800 bg-ink-900/60 p-4">
+        <View className="rounded-2xl border border-ink-800 bg-ink-900 p-4">
           <Text className="mb-1 text-sm text-ink-400">Por categoría</Text>
           {multiCount > 0 && (
             <Text className="mb-3 text-xs text-ink-500">
@@ -131,7 +133,7 @@ export default function ExpenseInsights({ sub, entries, prevEntries, prevMonth }
         </View>
       )}
 
-      <View className="rounded-xl border border-ink-800 bg-ink-900/60 p-4">
+      <View className="rounded-2xl border border-ink-800 bg-ink-900 p-4">
         <View className="mb-3 flex-row items-center justify-between">
           <Text className="text-sm text-ink-400">Precio por producto (unitario)</Text>
         </View>
@@ -139,7 +141,7 @@ export default function ExpenseInsights({ sub, entries, prevEntries, prevMonth }
           <TextInput
             className="mb-3 rounded-lg border border-ink-700 bg-ink-900 px-3 py-2 text-sm text-ink-100"
             placeholder="Buscar producto…"
-            placeholderTextColor="#877a61"
+            placeholderTextColor={c['ink-500']}
             value={query}
             onChangeText={setQuery}
           />

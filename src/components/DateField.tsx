@@ -2,7 +2,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useState } from 'react';
 import { Modal, Pressable, Text, View } from 'react-native';
 import { formatDay } from '../lib/dates';
-import { useScheme } from '../lib/theme';
+import { useScheme, useThemeColors } from '../lib/theme';
 
 /**
  * Botón que abre el selector de fecha nativo de iOS, en una hoja aparte a ancho completo.
@@ -12,6 +12,7 @@ import { useScheme } from '../lib/theme';
 export default function DateField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const [open, setOpen] = useState(false);
   const scheme = useScheme();
+  const c = useThemeColors();
   const [draft, setDraft] = useState(value ? new Date(value + 'T00:00:00') : new Date());
 
   const openPicker = () => {
@@ -34,7 +35,7 @@ export default function DateField({ value, onChange }: { value: string; onChange
         <Pressable className="flex-1 justify-end bg-black/60" onPress={() => setOpen(false)}>
           <Pressable className="rounded-t-3xl border border-ink-800 bg-ink-900 px-5 pb-8 pt-4" onPress={(e) => e.stopPropagation()}>
             <View className="mb-2 flex-row items-center justify-between">
-              <Text className="text-lg font-semibold text-ink-100">Elegir fecha</Text>
+              <Text className="text-lg font-bold text-ink-100">Elegir fecha</Text>
               <Pressable onPress={() => setOpen(false)} className="px-2 py-1" accessibilityLabel="Cerrar">
                 <Text className="text-ink-300">✕</Text>
               </Pressable>
@@ -44,7 +45,7 @@ export default function DateField({ value, onChange }: { value: string; onChange
               mode="date"
               display="inline"
               themeVariant={scheme}
-              accentColor="#bf3b2e"
+              accentColor={c['shu-500']}
               onChange={(_, d) => d && setDraft(d)}
               style={{ alignSelf: 'stretch' }}
             />

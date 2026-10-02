@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useDb } from '../lib/db';
 import { goToSub } from '../lib/nav';
+import { useThemeColors } from '../lib/theme';
 import { Empty } from './common';
 import PetSwitcher from './PetSwitcher';
 import TrainingPlan from './TrainingPlan';
@@ -14,6 +15,7 @@ const NIVELES = 5;
 
 /** Plan de adiestramiento por etapas + comandos individuales (por mascota), con nivel de dominio (0 a 5) y sesiones practicadas. */
 export default function PetTrainingView() {
+  const c = useThemeColors();
   const [nombre, setNombre] = useState('');
   const petProfiles = useDb((s) => s.petProfiles);
   const activePetId = useDb((s) => s.activePetId);
@@ -69,7 +71,7 @@ export default function PetTrainingView() {
             {profile && <TrainingPlan profile={profile} />}
 
             <View>
-              <Text className="mb-2 font-semibold text-ink-100">Comandos individuales</Text>
+              <Text className="mb-2 font-bold text-ink-100">Comandos individuales</Text>
               <Text className="mb-3 text-xs text-ink-500">Para trucos o comandos sueltos que no están en el plan de arriba.</Text>
             </View>
 
@@ -77,7 +79,7 @@ export default function PetTrainingView() {
               <TextInput
                 className="flex-1 rounded-lg border border-ink-700 bg-ink-900 px-3 py-2.5 text-base text-ink-100"
                 placeholder="Nuevo comando, ej: Sentado"
-                placeholderTextColor="#877a61"
+                placeholderTextColor={c['ink-500']}
                 value={nombre}
                 onChangeText={setNombre}
               />
@@ -91,7 +93,7 @@ export default function PetTrainingView() {
             ) : (
               <View className="gap-2">
                 {active.map((c) => (
-                  <View key={c.id} className="rounded-xl border border-ink-800 bg-ink-900/60 p-4">
+                  <View key={c.id} className="rounded-2xl border border-ink-800 bg-ink-900 p-4">
                     <View className="mb-2 flex-row items-center justify-between">
                       <Text className="font-medium text-ink-100">{c.nombre}</Text>
                       <Pressable onPress={() => remove(c.id, c.nombre)} className="px-2 py-1" accessibilityLabel="Borrar comando">

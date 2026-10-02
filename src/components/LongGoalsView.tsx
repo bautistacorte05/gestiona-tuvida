@@ -46,7 +46,7 @@ export default function LongGoalsView() {
               const done = g.current >= g.target && g.target > 0;
               const left = daysLeft(g.deadline);
               return (
-                <Pressable key={g.id} onPress={() => setEditing(g)} className="gap-2 rounded-xl border border-ink-800 bg-ink-900/60 p-4" style={{ width: '100%' }}>
+                <Pressable key={g.id} onPress={() => setEditing(g)} className="gap-2 rounded-2xl border border-ink-800 bg-ink-900 p-4" style={{ width: '100%' }}>
                   <View className="flex-row items-start justify-between gap-2">
                     <Text className="flex-1 font-medium text-ink-100">{g.title}</Text>
                     {done && (

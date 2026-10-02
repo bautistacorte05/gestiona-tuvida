@@ -4,10 +4,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { authErrorMessage } from '../lib/auth';
 import { supabase } from '../lib/supabase';
+import { useThemeColors, WASHI } from '../lib/theme';
 
 type Mode = 'signIn' | 'signUp';
 
 export default function LoginScreen() {
+  const c = useThemeColors();
   const [mode, setMode] = useState<Mode>('signIn');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -58,7 +60,7 @@ export default function LoginScreen() {
             <TextInput
               className="rounded-lg border border-ink-700 bg-ink-900 px-3 py-3 text-base text-ink-100"
               placeholder="Email"
-              placeholderTextColor="#877a61"
+              placeholderTextColor={c['ink-500']}
               autoCapitalize="none"
               autoComplete="email"
               keyboardType="email-address"
@@ -69,7 +71,7 @@ export default function LoginScreen() {
             <TextInput
               className="rounded-lg border border-ink-700 bg-ink-900 px-3 py-3 text-base text-ink-100"
               placeholder={mode === 'signUp' ? 'Contraseña (mínimo 6 caracteres)' : 'Contraseña'}
-              placeholderTextColor="#877a61"
+              placeholderTextColor={c['ink-500']}
               secureTextEntry
               autoComplete={mode === 'signUp' ? 'new-password' : 'current-password'}
               textContentType={mode === 'signUp' ? 'newPassword' : 'password'}
@@ -83,7 +85,7 @@ export default function LoginScreen() {
           {!!info && <Text className="text-sm text-moss-300">{info}</Text>}
 
           <Pressable onPress={submit} disabled={busy} className={`items-center rounded-lg bg-shu-500 py-3 ${busy ? 'opacity-60' : ''}`}>
-            {busy ? <ActivityIndicator color="#ede3d3" /> : <Text className="font-semibold text-washi">{mode === 'signIn' ? 'Entrar' : 'Crear cuenta'}</Text>}
+            {busy ? <ActivityIndicator color={WASHI} /> : <Text className="font-semibold text-washi">{mode === 'signIn' ? 'Entrar' : 'Crear cuenta'}</Text>}
           </Pressable>
 
           <Pressable onPress={switchMode} className="items-center py-2">

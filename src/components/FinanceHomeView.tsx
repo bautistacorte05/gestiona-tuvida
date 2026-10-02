@@ -71,7 +71,7 @@ export default function FinanceHomeView() {
           <ScreenTitle categoryId="finanzas" subId="balance" />
         </View>
 
-        <View className="rounded-xl border border-ink-800 border-l-4 border-l-shu-500 bg-ink-900/60 p-4">
+        <View className="rounded-2xl border border-ink-800 border-l-4 border-l-shu-500 bg-ink-900 p-4">
           <Text className="text-sm text-ink-400">Saldo actual</Text>
           <Text className={`mt-1 text-4xl font-semibold ${saldo >= 0 ? 'text-ink-100' : 'text-kurenai-400'}`}>{formatCurrency(saldo, 'ARS')}</Text>
           <Text className="mt-2 text-xs text-ink-500">
@@ -89,7 +89,7 @@ export default function FinanceHomeView() {
         </View>
 
         {(ahorroNeto.ARS !== 0 || ahorroNeto.USD !== 0) && (
-          <Pressable onPress={() => goToSub('finanzas', 'ahorros')} className="flex-row items-center gap-4 rounded-xl border border-ink-800 bg-ink-900/60 p-4">
+          <Pressable onPress={() => goToSub('finanzas', 'ahorros')} className="flex-row items-center gap-4 rounded-2xl border border-ink-800 bg-ink-900 p-4">
             <Text className="text-2xl">🐖</Text>
             <View className="flex-1">
               <Text className="text-sm text-ink-400">Ahorros</Text>
@@ -102,13 +102,13 @@ export default function FinanceHomeView() {
         )}
 
         <View>
-          <Text className="mb-2 font-semibold text-ink-100">Movimientos recientes</Text>
+          <Text className="mb-2 font-bold text-ink-100">Movimientos recientes</Text>
           {recientes.length === 0 ? (
-            <View className="rounded-xl border border-ink-800 bg-ink-900/60 p-4">
+            <View className="rounded-2xl border border-ink-800 bg-ink-900 p-4">
               <Text className="text-center text-sm text-ink-500">Todavía no cargaste gastos ni ingresos.</Text>
             </View>
           ) : (
-            <View className="rounded-xl border border-ink-800 bg-ink-900/60 p-2">
+            <View className="rounded-2xl border border-ink-800 bg-ink-900 p-2">
               {recientes.map(({ e, sub, cat }) => {
                 const isIngreso = sub.id === 'ingresos';
                 const isExternal = cat.id !== 'finanzas';

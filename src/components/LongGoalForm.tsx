@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Alert, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useDb, type LongGoal } from '../lib/db';
+import { useThemeColors } from '../lib/theme';
 import { parseNum } from './ItemsEditor';
 import DateField from './DateField';
 
 export default function LongGoalForm({ goal, onClose }: { goal?: LongGoal; onClose: () => void }) {
+  const c = useThemeColors();
   const addLongGoal = useDb((s) => s.addLongGoal);
   const updateLongGoal = useDb((s) => s.updateLongGoal);
   const archiveLongGoal = useDb((s) => s.archiveLongGoal);
@@ -46,7 +48,7 @@ export default function LongGoalForm({ goal, onClose }: { goal?: LongGoal; onClo
       <Pressable className="flex-1 justify-end bg-black/60" onPress={onClose}>
         <Pressable className="max-h-[88%] rounded-t-3xl border border-ink-800 bg-ink-900" onPress={(e) => e.stopPropagation()}>
           <View className="flex-row items-center justify-between border-b border-ink-800 px-5 py-3">
-            <Text className="text-lg font-semibold text-ink-100">🏁 {goal ? 'Editar' : 'Nueva'} meta</Text>
+            <Text className="text-lg font-bold text-ink-100">🏁 {goal ? 'Editar' : 'Nueva'} meta</Text>
             <Pressable onPress={onClose} className="px-2 py-1" accessibilityLabel="Cerrar">
               <Text className="text-ink-300">✕</Text>
             </Pressable>
@@ -58,7 +60,7 @@ export default function LongGoalForm({ goal, onClose }: { goal?: LongGoal; onClo
               <TextInput
                 className="rounded-lg border border-ink-700 bg-ink-900 px-3 py-2.5 text-base text-ink-100"
                 placeholder="Ej: Ahorrar para el viaje"
-                placeholderTextColor="#877a61"
+                placeholderTextColor={c['ink-500']}
                 value={title}
                 onChangeText={setTitle}
               />
@@ -70,7 +72,7 @@ export default function LongGoalForm({ goal, onClose }: { goal?: LongGoal; onClo
                   className="rounded-lg border border-ink-700 bg-ink-900 px-3 py-2.5 text-base text-ink-100"
                   keyboardType="decimal-pad"
                   placeholder="1000"
-                  placeholderTextColor="#877a61"
+                  placeholderTextColor={c['ink-500']}
                   value={target}
                   onChangeText={setTarget}
                 />
@@ -81,7 +83,7 @@ export default function LongGoalForm({ goal, onClose }: { goal?: LongGoal; onClo
                   className="rounded-lg border border-ink-700 bg-ink-900 px-3 py-2.5 text-base text-ink-100"
                   keyboardType="decimal-pad"
                   placeholder="0"
-                  placeholderTextColor="#877a61"
+                  placeholderTextColor={c['ink-500']}
                   value={current}
                   onChangeText={setCurrent}
                 />
@@ -91,7 +93,7 @@ export default function LongGoalForm({ goal, onClose }: { goal?: LongGoal; onClo
                 <TextInput
                   className="rounded-lg border border-ink-700 bg-ink-900 px-3 py-2.5 text-base text-ink-100"
                   placeholder="$"
-                  placeholderTextColor="#877a61"
+                  placeholderTextColor={c['ink-500']}
                   value={unit}
                   onChangeText={setUnit}
                 />

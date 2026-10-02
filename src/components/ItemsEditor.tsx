@@ -3,6 +3,7 @@ import { Pressable, Text, TextInput, View } from 'react-native';
 import { useDb, type Entry } from '../lib/db';
 import { monthKey } from '../lib/dates';
 import { itemsTotal, pctChange, pricesByProduct, productKey } from '../lib/prices';
+import { useThemeColors } from '../lib/theme';
 import { money, PctBadge } from './common';
 
 /** Fila en edición: los números quedan como texto hasta guardar. */
@@ -36,6 +37,7 @@ interface Props {
 }
 
 export default function ItemsEditor({ categoryId, subId, date, entryId, items, onChange }: Props) {
+  const c = useThemeColors();
   // Historial de precios anterior al mes de esta compra, para comparar.
   const monthStart = `${monthKey(date)}-01`;
   const allEntries = useDb((s) => s.entries);
@@ -69,7 +71,7 @@ export default function ItemsEditor({ categoryId, subId, date, entryId, items, o
                 <TextInput
                   className="flex-1 rounded-lg border border-ink-700 bg-ink-900 px-3 py-2 text-base text-ink-100"
                   placeholder="Producto (ej: Leche 1L)"
-                  placeholderTextColor="#877a61"
+                  placeholderTextColor={c['ink-500']}
                   value={it.producto}
                   onChangeText={(t) => set(i, { producto: t })}
                 />
@@ -93,7 +95,7 @@ export default function ItemsEditor({ categoryId, subId, date, entryId, items, o
                     className="rounded-lg border border-ink-700 bg-ink-900 px-3 py-2 text-base text-ink-100"
                     keyboardType="decimal-pad"
                     placeholder="0"
-                    placeholderTextColor="#877a61"
+                    placeholderTextColor={c['ink-500']}
                     value={it.precio}
                     onChangeText={(t) => set(i, { precio: t })}
                   />

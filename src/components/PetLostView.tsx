@@ -7,6 +7,7 @@ import { captureRef } from 'react-native-view-shot';
 import { useDb } from '../lib/db';
 import { formatDay, today } from '../lib/dates';
 import { goToSub } from '../lib/nav';
+import { useThemeColors } from '../lib/theme';
 import { Empty } from './common';
 import DateField from './DateField';
 import PetSwitcher from './PetSwitcher';
@@ -15,6 +16,7 @@ import ScreenTitle from './ScreenTitle';
 
 /** Genera un cartel de "se perdió" con la foto y los datos del Perfil de la mascota activa, listo para compartir. */
 export default function PetLostView() {
+  const c = useThemeColors();
   const petProfiles = useDb((s) => s.petProfiles);
   const activePetId = useDb((s) => s.activePetId);
   const addPetProfile = useDb((s) => s.addPetProfile);
@@ -64,13 +66,13 @@ export default function PetLostView() {
           </Empty>
         ) : (
           <>
-            <View className="gap-3 rounded-xl border border-ink-800 bg-ink-900/60 p-4">
+            <View className="gap-3 rounded-2xl border border-ink-800 bg-ink-900 p-4">
               <View>
                 <Text className="mb-1 text-sm text-ink-400">¿Dónde se perdió? (opcional)</Text>
                 <TextInput
                   className="rounded-lg border border-ink-700 bg-ink-900 px-3 py-2.5 text-base text-ink-100"
                   placeholder="Ej: Plaza Irlanda, Caballito"
-                  placeholderTextColor="#877a61"
+                  placeholderTextColor={c['ink-500']}
                   value={ultimaVez}
                   onChangeText={setUltimaVez}
                 />

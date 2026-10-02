@@ -9,7 +9,7 @@ import { useDb, type Check, type Entry } from '../../lib/db';
 import { formatMonth, monthKey, monthRange, shiftMonth, today } from '../../lib/dates';
 import { useCategoryName } from '../../lib/names';
 import { pctChange } from '../../lib/prices';
-import { useThemeColors } from '../../lib/theme';
+import { useThemeColors, withAlpha } from '../../lib/theme';
 import { CHART_CATEGORIES, formatMinutes, minutesByDay } from '../../lib/time';
 
 const WEEKDAYS = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
@@ -84,7 +84,7 @@ export default function MesScreen() {
         <View className="flex-row items-center justify-between gap-3">
           <View>
             <Text className="text-sm text-ink-400">¿En qué se fue el tiempo?</Text>
-            <Text className="text-2xl font-bold text-ink-100">{formatMonth(month)}</Text>
+            <Text className="text-[26px] font-bold text-ink-100">{formatMonth(month)}</Text>
           </View>
           <Stepper label={formatMonth(month)} onPrev={() => setMonth(shiftMonth(month, -1))} onNext={() => setMonth(shiftMonth(month, 1))} />
         </View>
@@ -107,7 +107,7 @@ export default function MesScreen() {
           </Kpi>
         </View>
 
-        <View className="rounded-xl border border-ink-800 bg-ink-900/60 p-4">
+        <View className="rounded-2xl border border-ink-800 bg-ink-900 p-4">
           <Text className="mb-3 text-sm text-ink-400">Reparto del tiempo</Text>
           {cur.total === 0 ? (
             <Text className="text-sm text-ink-500">Todavía no cargaste tiempo este mes. En &quot;Hoy&quot;, tocá &quot;⏱ Tiempo&quot; en cada actividad.</Text>
@@ -145,7 +145,7 @@ export default function MesScreen() {
           )}
         </View>
 
-        <View className="rounded-xl border border-ink-800 bg-ink-900/60 p-4">
+        <View className="rounded-2xl border border-ink-800 bg-ink-900 p-4">
           <View className="mb-3 flex-row flex-wrap items-center justify-between gap-2">
             <Text className="text-sm text-ink-400">Tiempo por día</Text>
             <Legend />
@@ -153,7 +153,7 @@ export default function MesScreen() {
           <MonthStack month={month} days={days} data={cur.byDay} />
         </View>
 
-        <View className="rounded-xl border border-ink-800 bg-ink-900/60 p-4">
+        <View className="rounded-2xl border border-ink-800 bg-ink-900 p-4">
           <Text className="mb-3 text-sm text-ink-400">🔥 Constancia (actividades marcadas por día)</Text>
           <View className="flex-row flex-wrap" style={{ gap: 4 }}>
             {WEEKDAYS.map((d, i) => (
@@ -173,11 +173,11 @@ export default function MesScreen() {
                   borderRadius: 6,
                   alignItems: 'center',
                   justifyContent: 'center',
-                  backgroundColor: n ? `rgba(191,59,46,${0.15 + (n / totalDaily) * 0.75})` : `${c['ink-800']}99`,
+                  backgroundColor: n ? withAlpha(c['shu-500'], 0.15 + (n / totalDaily) * 0.75) : `${c['ink-800']}99`,
                   borderWidth: todayDay === i + 1 ? 2 : 0,
                   borderColor: c['gold-400'],
                 }}>
-                <Text style={{ fontSize: 11, color: n / totalDaily > 0.6 ? '#16120f' : c['ink-100'] }}>{i + 1}</Text>
+                <Text style={{ fontSize: 11, color: n / totalDaily > 0.6 ? '#0b0b0d' : c['ink-100'] }}>{i + 1}</Text>
               </View>
             ))}
           </View>
@@ -189,7 +189,7 @@ export default function MesScreen() {
 
 function Kpi({ label, value, children }: { label: string; value: string; children?: React.ReactNode }) {
   return (
-    <View className="rounded-xl border border-ink-800 bg-ink-900/60 p-4" style={{ width: '47%' }}>
+    <View className="rounded-2xl border border-ink-800 bg-ink-900 p-4" style={{ width: '47%' }}>
       <Text className="text-xs text-ink-400">{label}</Text>
       <Text className="mt-1 text-xl font-semibold text-ink-100" numberOfLines={1}>
         {value}
