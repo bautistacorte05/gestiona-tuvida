@@ -10,6 +10,12 @@ import PetLostView from '../../../../components/PetLostView';
 import PetProfileView from '../../../../components/PetProfileView';
 import PetTrainingView from '../../../../components/PetTrainingView';
 import PetWalkLiveView from '../../../../components/PetWalkLiveView';
+import FootballSheet from '../../../../components/sheets/FootballSheet';
+import ProjectsSheet from '../../../../components/sheets/ProjectsSheet';
+import ReadingSheet from '../../../../components/sheets/ReadingSheet';
+import TrainingSheet from '../../../../components/sheets/TrainingSheet';
+import WellbeingSheet from '../../../../components/sheets/WellbeingSheet';
+import WorkSheet from '../../../../components/sheets/WorkSheet';
 import SubView from '../../../../components/SubView';
 import type { Category, Subcategory } from '../../../../config/categories';
 import { useFindSub } from '../../../../lib/names';
@@ -39,6 +45,13 @@ function renderSub(found: { category: Category; sub: Subcategory } | undefined):
   if (found.sub.custom === 'pet-profile') return <PetProfileView />;
   if (found.sub.custom === 'pet-lost') return <PetLostView />;
   if (found.sub.custom === 'pet-training') return <PetTrainingView />;
+  // Hojas de categoría (una por categoría, con todas sus secciones).
+  if (found.sub.custom === 'training-sheet') return <TrainingSheet />;
+  if (found.sub.custom === 'work-sheet') return <WorkSheet />;
+  if (found.sub.custom === 'football-sheet') return <FootballSheet />;
+  if (found.sub.custom === 'reading-sheet') return <ReadingSheet />;
+  if (found.sub.custom === 'wellbeing-sheet') return <WellbeingSheet />;
+  if (found.sub.custom === 'projects-sheet') return <ProjectsSheet />;
 
   if (found.sub.custom) {
     return (

@@ -57,6 +57,19 @@ export default function NavMenu({ onNavigate }: { onNavigate: (href: string) => 
       {categories.map((cat) => {
         const isOpen = toggled[cat.id] ?? cat.id === currentCat;
         const colors = COLOR_CLASSES[cat.color];
+        // Categoría con hoja propia: una sola entrada, directo a la hoja (sin desplegar secciones).
+        if (cat.landing) {
+          const active = cat.id === currentCat;
+          return (
+            <Pressable
+              key={cat.id}
+              onPress={() => onNavigate(`/c/${cat.id}/${cat.landing}`)}
+              className={`mx-2 flex-row items-center gap-3 rounded-xl px-3 py-2.5 ${active ? 'bg-shu-500/20' : 'active:bg-ink-800/60'}`}>
+              <Text className="text-lg">{cat.icon}</Text>
+              <Text className={`flex-1 text-sm font-medium ${active ? 'font-semibold text-ink-100' : 'text-ink-200'}`}>{cat.name}</Text>
+            </Pressable>
+          );
+        }
         return (
           <View key={cat.id}>
             <Pressable

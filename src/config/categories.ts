@@ -38,8 +38,21 @@ export interface Subcategory {
   periods?: boolean
   /** Botón en la pantalla que lleva a otra subcategoría de la misma categoría (ej. Paseos → En vivo). */
   link?: { label: string; subId: string }
-  /** Pantalla propia en vez del formulario genérico (ver App.tsx). */
-  custom?: 'finance-home' | 'daily-goals' | 'long-goals' | 'pet-profile' | 'pet-lost' | 'pet-training' | 'pet-walk-live'
+  /** Pantalla propia en vez del formulario genérico (ver [subId].tsx). Las `*-sheet` son la hoja de toda la categoría. */
+  custom?:
+    | 'finance-home'
+    | 'daily-goals'
+    | 'long-goals'
+    | 'pet-profile'
+    | 'pet-lost'
+    | 'pet-training'
+    | 'pet-walk-live'
+    | 'training-sheet'
+    | 'work-sheet'
+    | 'football-sheet'
+    | 'reading-sheet'
+    | 'wellbeing-sheet'
+    | 'projects-sheet'
 }
 
 export interface Category {
@@ -52,7 +65,10 @@ export interface Category {
   daily?: boolean
   /** Color en los gráficos de tiempo (paleta validada para daltonismo sobre fondo oscuro). */
   chart?: string
-  /** Si se toca el nombre de la categoría en el menú, navega directo a esta subcategoría. */
+  /**
+   * Categoría con hoja propia: en el menú es una sola entrada (sin desplegar secciones) que lleva
+   * directo a esta subcategoría. Las demás secciones van `hidden` (sus datos siguen ahí; la hoja los muestra).
+   */
   landing?: string
   subcategories: Subcategory[]
 }
@@ -118,11 +134,13 @@ export const CATEGORIES: Category[] = [
     name: 'Entrenamiento',
     icon: '🏋️',
     color: 'orange',
+    landing: 'gimnasio',
     subcategories: [
       {
         id: 'gimnasio',
         name: 'Gimnasio',
         icon: '💪',
+        custom: 'training-sheet',
         fields: [
           { key: 'grupo', label: 'Grupo muscular', type: 'select', multi: true, options: ['Pecho', 'Espalda', 'Piernas', 'Hombros', 'Brazos', 'Core', 'Full body'], required: true },
           { ...minutos, required: true },
@@ -138,11 +156,13 @@ export const CATEGORIES: Category[] = [
     name: 'Trabajo',
     icon: '💼',
     color: 'teal',
+    landing: 'jornada',
     subcategories: [
       {
         id: 'jornada',
         name: 'Jornada',
         icon: '🕘',
+        custom: 'work-sheet',
         fields: [
           { key: 'horas', label: 'Horas', type: 'number', unit: 'h', required: true, aggregate: 'sum' },
           { key: 'modalidad', label: 'Modalidad', type: 'select', options: ['Oficina', 'Remoto', 'Híbrido'] },
@@ -153,6 +173,7 @@ export const CATEGORIES: Category[] = [
         id: 'tareas',
         name: 'Tareas',
         icon: '✅',
+        hidden: true,
         fields: [
           { key: 'tarea', label: 'Tarea', type: 'text', required: true },
           { key: 'estado', label: 'Estado', type: 'select', options: ['Pendiente', 'En curso', 'Hecha'], required: true },
@@ -193,11 +214,13 @@ export const CATEGORIES: Category[] = [
     name: 'Fútbol',
     icon: '⚽',
     color: 'lime',
+    landing: 'partidos',
     subcategories: [
       {
         id: 'partidos',
         name: 'Partidos',
         icon: '🥅',
+        custom: 'football-sheet',
         fields: [
           { key: 'formato', label: 'Formato', type: 'select', options: ['Fútbol 5', 'Fútbol 7', 'Fútbol 8', 'Fútbol 11'], required: true },
           { key: 'resultado', label: 'Resultado', type: 'select', options: ['Ganado', 'Empatado', 'Perdido'], required: true },
@@ -215,11 +238,13 @@ export const CATEGORIES: Category[] = [
     name: 'Lectura',
     icon: '📚',
     color: 'sky',
+    landing: 'libros',
     subcategories: [
       {
         id: 'libros',
         name: 'Libros',
         icon: '📕',
+        custom: 'reading-sheet',
         fields: [
           { key: 'titulo', label: 'Título', type: 'text', required: true },
           { key: 'autor', label: 'Autor', type: 'text' },
@@ -231,6 +256,7 @@ export const CATEGORIES: Category[] = [
         id: 'sesiones',
         name: 'Sesiones',
         icon: '📖',
+        hidden: true,
         fields: [
           { key: 'libro', label: 'Libro', type: 'text', required: true },
           { key: 'paginas', label: 'Páginas', type: 'number', aggregate: 'sum' },
@@ -286,11 +312,13 @@ export const CATEGORIES: Category[] = [
     name: 'Bienestar',
     icon: '🧘',
     color: 'rose',
+    landing: 'sueno',
     subcategories: [
       {
         id: 'sueno',
         name: 'Sueño',
         icon: '😴',
+        custom: 'wellbeing-sheet',
         fields: [
           { key: 'horas', label: 'Horas', type: 'number', unit: 'h', required: true, aggregate: 'avg' },
           { key: 'calidad', label: 'Calidad', type: 'select', options: ['Muy buena', 'Buena', 'Regular', 'Mala'] },
@@ -300,6 +328,7 @@ export const CATEGORIES: Category[] = [
         id: 'animo',
         name: 'Ánimo',
         icon: '🙂',
+        hidden: true,
         fields: [
           { key: 'nivel', label: 'Nivel (1-5)', type: 'number', required: true, aggregate: 'avg' },
           { key: 'nota', label: 'Nota', type: 'text' },
@@ -322,11 +351,13 @@ export const CATEGORIES: Category[] = [
     name: 'Proyectos',
     icon: '🗂️',
     color: 'indigo',
+    landing: 'proyectos',
     subcategories: [
       {
         id: 'proyectos',
         name: 'Proyectos',
         icon: '🗂️',
+        custom: 'projects-sheet',
         fields: [
           { key: 'nombre', label: 'Nombre', type: 'text', required: true },
           { key: 'plazo', label: 'Plazo', type: 'select', options: ['Corto plazo', 'Largo plazo'], required: true },

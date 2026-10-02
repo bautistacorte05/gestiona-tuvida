@@ -184,11 +184,19 @@ export default function AppSidebar() {
           <View className="gap-0.5">
             {categories.map((cat) => {
               const item = { id: `cat:${cat.id}`, icon: cat.icon, label: cat.name, hint: cat.name };
-              return <SidebarItem key={item.id} {...itemProps(item, cat.id === currentCat, () => openCategory(cat.id))} />;
+              // Con hoja propia va directo a la hoja; si no, agranda la barra con la categoría abierta.
+              const onPress = cat.landing ? () => go(`/c/${cat.id}/${cat.landing}`) : () => openCategory(cat.id);
+              return <SidebarItem key={item.id} {...itemProps(item, cat.id === currentCat, onPress)} />;
             })}
           </View>
         ) : (
           categories.map((cat) => {
+            // Categoría con hoja propia: una sola entrada, directo a la hoja (sin desplegar secciones).
+            if (cat.landing) {
+              const href = `/c/${cat.id}/${cat.landing}`;
+              const item = { id: `cat:${cat.id}`, icon: cat.icon, label: cat.name, hint: cat.name };
+              return <SidebarItem key={item.id} {...itemProps(item, cat.id === currentCat, () => go(href))} />;
+            }
             const open = isOpen(cat.id);
             return (
               <View key={cat.id}>
