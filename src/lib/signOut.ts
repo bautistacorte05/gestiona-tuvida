@@ -1,16 +1,5 @@
-import { Alert, Platform } from 'react-native';
-
+import { confirm } from './confirm';
 import { signOutSafely } from './sync';
-
-function confirm(title: string, message: string, action: string): Promise<boolean> {
-  if (Platform.OS === 'web') return Promise.resolve(window.confirm(`${title}\n\n${message}`));
-  return new Promise((resolve) =>
-    Alert.alert(title, message, [
-      { text: 'Cancelar', style: 'cancel', onPress: () => resolve(false) },
-      { text: action, style: 'destructive', onPress: () => resolve(true) },
-    ]),
-  );
-}
 
 /** Cierra sesión subiendo antes lo pendiente; si algo no se pudo subir, pregunta antes de perderlo. */
 export async function signOutWithConfirm() {

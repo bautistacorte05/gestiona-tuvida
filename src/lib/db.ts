@@ -37,6 +37,8 @@ export interface DailyGoal {
   title: string
   createdAt: number
   archived?: boolean
+  /** Cuándo se borró (ms): el Panel de hábitos la sigue mostrando en los días anteriores. */
+  archivedAt?: number
 }
 
 /** Meta a largo plazo con progreso numérico (Metas → Largo plazo). */
@@ -294,7 +296,8 @@ export const useDb = create<DbState & DbActions>()(
         set((s) => ({ dailyGoals: [...s.dailyGoals, { id, title: title.trim(), createdAt: Date.now() }] }))
         return id
       },
-      archiveDailyGoal: (id) => set((s) => ({ dailyGoals: s.dailyGoals.map((g) => (g.id === id ? { ...g, archived: true } : g)) })),
+      archiveDailyGoal: (id) =>
+        set((s) => ({ dailyGoals: s.dailyGoals.map((g) => (g.id === id ? { ...g, archived: true, archivedAt: Date.now() } : g)) })),
 
       addLongGoal: (data) => {
         const id = uuid()
