@@ -149,6 +149,8 @@ export interface UserProfile {
   fotoUri?: string
   /** Color de la app (Ajustes → Apariencia, ver lib/theme.ts). Sin valor = rojo. */
   accent?: AccentId
+  /** Meta de horas de trabajo por semana (hoja de Trabajo). Sin valor = 40. */
+  metaHorasSemana?: number
   updatedAt: number
 }
 
