@@ -2,7 +2,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useState } from 'react';
 import { Modal, Pressable, Text, View } from 'react-native';
 
-import { useScheme } from '../lib/theme';
+import { useScheme, useThemeColors } from '../lib/theme';
 
 const toHHMM = (d: Date) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 const fromHHMM = (v: string) => {
@@ -16,6 +16,7 @@ const fromHHMM = (v: string) => {
 export default function TimeField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const [open, setOpen] = useState(false);
   const scheme = useScheme();
+  const c = useThemeColors();
   const [draft, setDraft] = useState(() => fromHHMM(value));
 
   const openPicker = () => {
@@ -37,7 +38,7 @@ export default function TimeField({ value, onChange }: { value: string; onChange
         <Pressable className="flex-1 justify-end bg-black/60" onPress={() => setOpen(false)}>
           <Pressable className="rounded-t-3xl border border-ink-800 bg-ink-900 px-5 pb-8 pt-4" onPress={(e) => e.stopPropagation()}>
             <View className="mb-2 flex-row items-center justify-between">
-              <Text className="text-lg font-semibold text-ink-100">Elegir hora</Text>
+              <Text className="text-lg font-bold text-ink-100">Elegir hora</Text>
               <Pressable onPress={() => setOpen(false)} className="px-2 py-1" accessibilityLabel="Cerrar">
                 <Text className="text-ink-300">✕</Text>
               </Pressable>
@@ -48,7 +49,7 @@ export default function TimeField({ value, onChange }: { value: string; onChange
               display="spinner"
               is24Hour
               themeVariant={scheme}
-              accentColor="#bf3b2e"
+              accentColor={c['shu-500']}
               onChange={(_, d) => d && setDraft(d)}
               style={{ alignSelf: 'stretch' }}
             />

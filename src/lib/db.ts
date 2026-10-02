@@ -3,6 +3,7 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import type { TrainingCategory } from '../config/training'
 import type { Item } from './prices'
+import type { AccentId } from './theme'
 
 /** Subcategorías de Mascota cuyos registros pertenecen a una mascota puntual. */
 export const PET_OWNED_SUBS = ['paseos', 'alimento', 'salud']
@@ -146,6 +147,8 @@ export interface UserProfile {
   ciudad?: string
   /** data URI JPEG liviano, como la foto de la mascota. */
   fotoUri?: string
+  /** Color de la app (Ajustes → Apariencia, ver lib/theme.ts). Sin valor = rojo. */
+  accent?: AccentId
   updatedAt: number
 }
 

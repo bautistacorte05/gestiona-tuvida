@@ -2,15 +2,16 @@
  * Página que corre DENTRO del WebView para mostrar el mapa. Usa Leaflet + OpenStreetMap
  * (los mismos que la app web), cargados desde un CDN. React Native le manda los puntos
  * del recorrido con postMessage; esta página los recibe y va dibujando la línea.
+ * `background` es el fondo del modo actual y `route` el color de la app (la línea del recorrido).
  */
-export const MAP_HTML = `<!doctype html>
+export const mapHtml = (background: string, route: string) => `<!doctype html>
 <html>
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
-    html, body, #map { height: 100%; margin: 0; padding: 0; background: #16120f; }
+    html, body, #map { height: 100%; margin: 0; padding: 0; background: ${background}; }
   </style>
 </head>
 <body>
@@ -19,7 +20,7 @@ export const MAP_HTML = `<!doctype html>
   <script>
     var map = L.map('map', { attributionControl: false, zoomControl: false }).setView([-34.6037, -58.3816], 16);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-    var line = L.polyline([], { color: '#bf3b2e', weight: 5 }).addTo(map);
+    var line = L.polyline([], { color: '${route}', weight: 5 }).addTo(map);
     var startMarker = null;
 
     function handleMessage(raw) {
@@ -28,7 +29,7 @@ export const MAP_HTML = `<!doctype html>
         if (msg.type === 'point') {
           var ll = [msg.lat, msg.lng];
           if (!startMarker) {
-            startMarker = L.circleMarker(ll, { radius: 7, color: '#b8934b', weight: 3, fillColor: '#16120f', fillOpacity: 1 }).addTo(map);
+            startMarker = L.circleMarker(ll, { radius: 7, color: '#b8934b', weight: 3, fillColor: '${background}', fillOpacity: 1 }).addTo(map);
           }
           line.addLatLng(ll);
           map.panTo(ll);
@@ -41,7 +42,7 @@ export const MAP_HTML = `<!doctype html>
           line.setLatLngs(latlngs);
           if (startMarker) { map.removeLayer(startMarker); startMarker = null; }
           if (latlngs.length) {
-            startMarker = L.circleMarker(latlngs[0], { radius: 7, color: '#b8934b', weight: 3, fillColor: '#16120f', fillOpacity: 1 }).addTo(map);
+            startMarker = L.circleMarker(latlngs[0], { radius: 7, color: '#b8934b', weight: 3, fillColor: '${background}', fillOpacity: 1 }).addTo(map);
             map.fitBounds(line.getBounds(), { padding: [30, 30], maxZoom: 17 });
           }
         }

@@ -10,6 +10,7 @@ import { useDb } from '../../lib/db';
 import { pickAndResizeImage } from '../../lib/image';
 import { signOutWithConfirm } from '../../lib/signOut';
 import { syncNow, useSyncStatus } from '../../lib/sync';
+import { ACCENTS, useAccent, useThemeColors } from '../../lib/theme';
 import { useUiPrefs } from '../../lib/uiPrefs';
 
 const INPUT = 'rounded-lg border border-ink-700 bg-ink-900 px-3 py-2.5 text-base text-ink-100';
@@ -36,6 +37,7 @@ function ProfileCard() {
   const { session } = useAuth();
   const profile = useDb((s) => s.userProfile[0]);
   const updateUserProfile = useDb((s) => s.updateUserProfile);
+  const c = useThemeColors();
   const email = session?.user.email ?? '';
 
   const [editing, setEditing] = useState(false);
@@ -75,7 +77,7 @@ function ProfileCard() {
 
   if (editing) {
     return (
-      <View className="gap-3 rounded-xl border border-ink-800 bg-ink-900/60 p-4">
+      <View className="gap-3 rounded-2xl border border-ink-800 bg-ink-900 p-4">
         <Text className="text-sm text-ink-400">Perfil</Text>
         <View className="flex-row items-center gap-3">
           <Pressable onPress={pickPhoto}>
@@ -94,10 +96,10 @@ function ProfileCard() {
         </View>
         <View className="flex-row gap-2">
           <Field label="Nombre">
-            <TextInput className={INPUT} placeholder="Ej: Lucía" placeholderTextColor="#877a61" value={nombre} onChangeText={setNombre} autoComplete="given-name" />
+            <TextInput className={INPUT} placeholder="Ej: Lucía" placeholderTextColor={c['ink-500']} value={nombre} onChangeText={setNombre} autoComplete="given-name" />
           </Field>
           <Field label="Apellido">
-            <TextInput className={INPUT} placeholder="Ej: Fernández" placeholderTextColor="#877a61" value={apellido} onChangeText={setApellido} autoComplete="family-name" />
+            <TextInput className={INPUT} placeholder="Ej: Fernández" placeholderTextColor={c['ink-500']} value={apellido} onChangeText={setApellido} autoComplete="family-name" />
           </Field>
         </View>
         <View className="flex-row gap-2">
@@ -108,7 +110,7 @@ function ProfileCard() {
             <TextInput
               className={INPUT}
               placeholder="Ej: 11 2345 6789"
-              placeholderTextColor="#877a61"
+              placeholderTextColor={c['ink-500']}
               keyboardType="phone-pad"
               value={telefono}
               onChangeText={setTelefono}
@@ -117,7 +119,7 @@ function ProfileCard() {
           </Field>
         </View>
         <Field label="Ciudad / país">
-          <TextInput className={INPUT} placeholder="Ej: Buenos Aires, Argentina" placeholderTextColor="#877a61" value={ciudad} onChangeText={setCiudad} />
+          <TextInput className={INPUT} placeholder="Ej: Buenos Aires, Argentina" placeholderTextColor={c['ink-500']} value={ciudad} onChangeText={setCiudad} />
         </Field>
         <View className="flex-row gap-2 pt-1">
           <Pressable onPress={() => setEditing(false)} className="items-center justify-center rounded-lg border border-ink-700 px-4 py-2.5">
@@ -139,7 +141,7 @@ function ProfileCard() {
   ].filter(Boolean) as string[];
 
   return (
-    <View className="gap-3 rounded-xl border border-ink-800 bg-ink-900/60 p-4">
+    <View className="gap-3 rounded-2xl border border-ink-800 bg-ink-900 p-4">
       <Text className="text-sm text-ink-400">Perfil</Text>
       <View className="flex-row items-center gap-4">
         <Avatar profile={profile} email={email} size={72} />
@@ -170,7 +172,7 @@ function AppearanceCard() {
   const appearance = useUiPrefs((s) => s.appearance);
   const setAppearance = useUiPrefs((s) => s.setAppearance);
   return (
-    <View className="gap-3 rounded-xl border border-ink-800 bg-ink-900/60 p-4">
+    <View className="gap-3 rounded-2xl border border-ink-800 bg-ink-900 p-4">
       <Text className="text-sm text-ink-400">Apariencia</Text>
       <View className="flex-row gap-2">
         {APPEARANCES.map((a) => {
@@ -188,6 +190,40 @@ function AppearanceCard() {
       <Text className="text-xs text-ink-500">
         {appearance === 'system' ? 'Sigue el modo claro u oscuro de este dispositivo.' : 'Solo cambia en este dispositivo.'}
       </Text>
+      <AccentPicker />
+    </View>
+  );
+}
+
+/** Color de la app: se guarda en el perfil de la cuenta, así es el mismo en el celular y en la PC. */
+function AccentPicker() {
+  const accent = useAccent();
+  const updateUserProfile = useDb((s) => s.updateUserProfile);
+  const c = useThemeColors();
+  return (
+    <View className="gap-2 border-t border-ink-800 pt-3">
+      <Text className="text-sm text-ink-400">Color de la app</Text>
+      <View className="flex-row flex-wrap gap-2">
+        {ACCENTS.map((a) => {
+          const active = accent === a.id;
+          return (
+            <Pressable
+              key={a.id}
+              // Tocar el que ya está elegido no hace nada: cada cambio vuelve a subir el perfil (con la foto).
+              onPress={() => {
+                if (!active) updateUserProfile({ accent: a.id });
+              }}
+              accessibilityRole="radio"
+              accessibilityState={{ checked: active }}
+              accessibilityLabel={a.label}
+              className="h-11 w-11 items-center justify-center rounded-full border-2"
+              style={{ borderColor: active ? c['ink-100'] : 'transparent' }}>
+              <View className="h-8 w-8 rounded-full" style={{ backgroundColor: a[500] }} />
+            </Pressable>
+          );
+        })}
+      </View>
+      <Text className="text-xs text-ink-500">Se guarda en tu cuenta: es el mismo en el celular y en la PC.</Text>
     </View>
   );
 }
@@ -195,6 +231,7 @@ function AppearanceCard() {
 function AccountCard() {
   const { state, lastSyncAt, error } = useSyncStatus();
   const pending = useDb((s) => Object.keys(s.sync.pending).length);
+  const c = useThemeColors();
   const [leaving, setLeaving] = useState(false);
 
   const signOut = async () => {
@@ -204,7 +241,7 @@ function AccountCard() {
   };
 
   return (
-    <View className="gap-3 rounded-xl border border-ink-800 bg-ink-900/60 p-4">
+    <View className="gap-3 rounded-2xl border border-ink-800 bg-ink-900 p-4">
       <Text className="text-sm text-ink-400">Cuenta</Text>
       <View className="flex-row items-center gap-3">
         <Text className={`flex-1 text-sm ${state === 'error' ? 'text-kurenai-300' : 'text-ink-300'}`}>{statusText(state, pending, lastSyncAt, error)}</Text>
@@ -213,7 +250,7 @@ function AccountCard() {
         </Pressable>
       </View>
       <Pressable onPress={signOut} disabled={leaving} className="self-start rounded-lg border border-ink-700 px-4 py-2.5">
-        {leaving ? <ActivityIndicator color="#bf3b2e" /> : <Text className="text-sm font-medium text-kurenai-300">Cerrar sesión</Text>}
+        {leaving ? <ActivityIndicator color={c['shu-500']} /> : <Text className="text-sm font-medium text-kurenai-300">Cerrar sesión</Text>}
       </Pressable>
     </View>
   );

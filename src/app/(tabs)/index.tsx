@@ -61,8 +61,8 @@ export default function HoyScreen() {
         </View>
 
         {isToday && (
-          <View className="flex-row items-center justify-between">
-            <Text className="text-xl font-bold text-ink-100">{greeting()}{nombre ? `, ${nombre}` : ''} 👋</Text>
+          <View className="flex-row items-center justify-between gap-3">
+            <Text className="shrink text-2xl font-bold text-ink-100">{greeting()}{nombre ? `, ${nombre}` : ''} 👋</Text>
             <Text className="text-sm font-medium text-ink-400">
               {doneCount}/{DAILY_CATEGORIES.length} · {Math.round((doneCount / DAILY_CATEGORIES.length) * 100)}%
             </Text>
@@ -92,7 +92,7 @@ export default function HoyScreen() {
               return (
                 <View
                   key={cat.id}
-                  className={`h-28 overflow-hidden rounded-xl border-2 ${checked ? 'border-moss-500 bg-moss-500/20' : 'border-ink-800 bg-ink-900/60'}`}
+                  className={`h-28 overflow-hidden rounded-2xl border-2 ${checked ? 'border-moss-500 bg-moss-500/20' : 'border-ink-800 bg-ink-900'}`}
                   style={{ width: '47%' }}>
                   {streak > 0 && (
                     <View className="absolute right-1.5 top-1.5 z-10 flex-row items-center rounded-full border border-gold-500/50 bg-ink-950/80 px-1.5 py-0.5">
@@ -149,13 +149,13 @@ export default function HoyScreen() {
 
         {entries.length > 0 ? (
           <View>
-            <Text className="mb-2 font-semibold text-ink-100">Lo que registraste ({entries.length})</Text>
+            <Text className="mb-2 font-bold text-ink-100">Lo que registraste ({entries.length})</Text>
             <View className="gap-3">
               {DAILY_CATEGORIES.map((cat) => {
                 const list = entries.filter((e) => e.categoryId === cat.id);
                 if (!list.length) return null;
                 return (
-                  <View key={cat.id} className="rounded-xl border border-ink-800 bg-ink-900/60 p-2">
+                  <View key={cat.id} className="rounded-2xl border border-ink-800 bg-ink-900 p-2">
                     <Text className={`px-3 pb-1 pt-1 text-xs font-medium ${COLOR_CLASSES[cat.color].text}`}>
                       {cat.icon} {nameOf(cat.id, cat.name)}
                     </Text>

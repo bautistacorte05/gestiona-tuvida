@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, Pressable, Text, TextInput, View } from 'react-native';
 import type { Category } from '../config/categories';
 import { useDb } from '../lib/db';
+import { useThemeColors } from '../lib/theme';
 import { formatMinutes } from '../lib/time';
 
 const QUICK = [15, 30, 45, 60, 90, 120, 180, 240];
@@ -15,6 +16,7 @@ interface Props {
 
 /** Carga rápida de cuántos minutos se le dedicó a una actividad ese día. */
 export default function MinutesSheet({ category, date, current, onClose }: Props) {
+  const c = useThemeColors();
   const setMinutes = useDb((s) => s.setMinutes);
   const [value, setValue] = useState(current ? String(current) : '');
   const min = Number(value.replace(',', '.')) || 0;
@@ -30,7 +32,7 @@ export default function MinutesSheet({ category, date, current, onClose }: Props
       <Pressable className="flex-1 justify-end bg-black/60" onPress={onClose}>
         <Pressable className="rounded-t-3xl border border-ink-800 bg-ink-900 px-5 pb-8 pt-4" onPress={(e) => e.stopPropagation()}>
           <View className="mb-4 flex-row items-center justify-between">
-            <Text className="text-lg font-semibold text-ink-100">
+            <Text className="text-lg font-bold text-ink-100">
               ⏱ {category.icon} {category.name}
             </Text>
             <Pressable onPress={onClose} className="px-2 py-1" accessibilityLabel="Cerrar">
@@ -57,7 +59,7 @@ export default function MinutesSheet({ category, date, current, onClose }: Props
             className="mb-4 rounded-lg border border-ink-700 bg-ink-900 px-3 py-2.5 text-base text-ink-100"
             keyboardType="numeric"
             placeholder="Ej: 50"
-            placeholderTextColor="#877a61"
+            placeholderTextColor={c['ink-500']}
             value={value}
             onChangeText={setValue}
           />

@@ -13,7 +13,7 @@ import AppSidebar from '../components/AppSidebar';
 import { AuthProvider, useAuth } from '../lib/auth';
 import { useIsDesktop } from '../lib/layout';
 import { startSync, stopSync } from '../lib/sync';
-import { applyPageTheme, themeVars, useScheme, useThemeColors } from '../lib/theme';
+import { applyPageTheme, themeVars, useAccent, useScheme, useThemeColors } from '../lib/theme';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -51,20 +51,21 @@ function RootStack() {
   );
 }
 
-// Paleta "Shu no Michi" en modo oscuro o claro (Ajustes → Apariencia; ver lib/theme.ts).
+// Modo oscuro o claro (por dispositivo) y color de la app (de la cuenta): Ajustes → Apariencia; ver lib/theme.ts.
 export default function RootLayout() {
   const scheme = useScheme();
+  const accent = useAccent();
   const c = useThemeColors();
 
-  useEffect(() => applyPageTheme(scheme), [scheme]);
+  useEffect(() => applyPageTheme(scheme, accent), [scheme, accent]);
 
   const navTheme = useMemo(() => {
     const base = scheme === 'dark' ? DarkTheme : DefaultTheme;
-    return { ...base, colors: { ...base.colors, background: c['ink-950'], card: c['ink-900'], border: c['ink-800'], text: c['ink-100'], primary: '#bf3b2e' } };
+    return { ...base, colors: { ...base.colors, background: c['ink-950'], card: c['ink-900'], border: c['ink-800'], text: c['ink-100'], primary: c['shu-500'] } };
   }, [scheme, c]);
 
   return (
-    <GestureHandlerRootView style={[{ flex: 1 }, themeVars(scheme)]}>
+    <GestureHandlerRootView style={[{ flex: 1 }, themeVars(scheme, accent)]}>
       <ThemeProvider value={navTheme}>
         <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
         <AuthProvider>

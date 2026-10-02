@@ -7,18 +7,12 @@ import { WebView } from 'react-native-webview';
 import { toISO } from '../lib/dates';
 import { useDb } from '../lib/db';
 import { formatDuration, formatPace } from '../lib/geo';
-import { MAP_HTML } from '../lib/mapHtml';
-import { useThemeColors, type ThemeColors } from '../lib/theme';
+import { mapHtml } from '../lib/mapHtml';
+import { useThemeColors, WASHI, type ThemeColors } from '../lib/theme';
 import { finishWalk, isWalkInterrupted, requestLocationPermission, resumeWalk, startWalk, supportsBackground, useLiveWalk } from '../lib/walkTracker';
 import BackButton from './BackButton';
 import PetSwitcher from './PetSwitcher';
 import ScreenTitle from './ScreenTitle';
-
-// Colores fijos (iguales en modo claro y oscuro): el botón rojo y su texto. El resto sale del tema.
-const COLORS = {
-  washi: '#ede3d3',
-  shu: '#bf3b2e',
-};
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -55,6 +49,10 @@ function PetWalkWebNotice() {
 
 function PetWalkLiveViewNative() {
   const styles = useStyles();
+  const c = useThemeColors();
+  // El mapa se arma una vez al entrar: si cambiara el HTML, el WebView se recargaría y se
+  // perdería la línea ya dibujada.
+  const [html] = useState(() => mapHtml(c['ink-950'], c['shu-500']));
   const webRef = useRef<WebView>(null);
   /** Cuántos puntos del recorrido ya se dibujaron en el mapa. */
   const drawnRef = useRef(0);
@@ -174,7 +172,7 @@ function PetWalkLiveViewNative() {
         <View style={styles.banner}>
           <Text style={styles.bannerText}>El paseo quedó cortado (la app se cerró). Lo recorrido hasta ahí está guardado.</Text>
           <View style={styles.bannerRow}>
-            <Pressable onPress={resume} disabled={busy} style={[styles.smallButton, { backgroundColor: COLORS.shu }]}>
+            <Pressable onPress={resume} disabled={busy} style={[styles.smallButton, { backgroundColor: c['shu-500'] }]}>
               <Text style={styles.buttonText}>Continuar</Text>
             </Pressable>
             <Pressable onPress={stop} disabled={busy} style={[styles.smallButton, styles.outline]}>
@@ -185,7 +183,7 @@ function PetWalkLiveViewNative() {
       )}
 
       <View style={styles.mapWrap}>
-        <WebView ref={webRef} source={{ html: MAP_HTML }} onLoadEnd={() => setMapReady(true)} style={styles.map} javaScriptEnabled />
+        <WebView ref={webRef} source={{ html }} onLoadEnd={() => setMapReady(true)} style={styles.map} javaScriptEnabled />
         {!mapReady && (
           <View style={styles.mapLoading}>
             <Text style={styles.hint}>Cargando mapa…</Text>
@@ -202,12 +200,12 @@ function PetWalkLiveViewNative() {
       </View>
 
       {tracking && (
-        <Pressable onPress={stop} disabled={busy} style={[styles.button, { backgroundColor: COLORS.shu }]}>
+        <Pressable onPress={stop} disabled={busy} style={[styles.button, { backgroundColor: c['shu-500'] }]}>
           <Text style={styles.buttonText}>Finalizar paseo</Text>
         </Pressable>
       )}
       {!walk.active && (
-        <Pressable onPress={start} disabled={busy} style={[styles.button, { backgroundColor: COLORS.shu }]}>
+        <Pressable onPress={start} disabled={busy} style={[styles.button, { backgroundColor: c['shu-500'] }]}>
           <Text style={styles.buttonText}>▶ Iniciar paseo</Text>
         </Pressable>
       )}
@@ -242,11 +240,11 @@ const makeStyles = (c: ThemeColors) =>
     mapLoading: { position: 'absolute', inset: 0, alignItems: 'center', justifyContent: 'center' },
     error: { color: '#e07a6a', fontSize: 13 },
     statsRow: { flexDirection: 'row', gap: 10 },
-    stat: { flex: 1, backgroundColor: c['ink-900'], borderRadius: 14, borderWidth: 1, borderColor: c['ink-800'], alignItems: 'center', paddingVertical: 12 },
+    stat: { flex: 1, backgroundColor: c['ink-900'], borderRadius: 16, borderWidth: 1, borderColor: c['ink-800'], alignItems: 'center', paddingVertical: 12 },
     statLabel: { color: c['ink-400'], fontSize: 12 },
     statValue: { color: c['ink-100'], fontSize: 18, fontWeight: '700', marginTop: 4 },
     button: { borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
-    buttonText: { color: COLORS.washi, fontSize: 16, fontWeight: '700' },
+    buttonText: { color: WASHI, fontSize: 16, fontWeight: '700' },
     hint: { color: c['ink-400'], fontSize: 12, textAlign: 'center' },
     banner: { gap: 10, borderRadius: 12, borderWidth: 1, borderColor: '#b8934b66', backgroundColor: '#b8934b1a', padding: 12 },
     bannerText: { color: c['ink-100'], fontSize: 13 },

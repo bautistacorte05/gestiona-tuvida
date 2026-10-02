@@ -169,7 +169,7 @@ export default function SubView({ category, sub }: { category: Category; sub: Su
 
         <View>
           <View className="mb-2 flex-row items-center justify-between">
-            <Text className="font-semibold text-ink-100">Registros</Text>
+            <Text className="font-bold text-ink-100">Registros</Text>
             {(!isPetOwned || hasPets) && (
               <Pressable onPress={() => setEditing('new')} className="rounded-lg bg-shu-500 px-4 py-2.5">
                 <Text className="font-medium text-washi">+ Agregar</Text>
@@ -181,7 +181,7 @@ export default function SubView({ category, sub }: { category: Category; sub: Su
           ) : (
             <View className="gap-3">
               {byDay.map(([date, list]) => (
-                <View key={date} className="rounded-xl border border-ink-800 bg-ink-900/60 p-2">
+                <View key={date} className="rounded-2xl border border-ink-800 bg-ink-900 p-2">
                   <Text className="px-3 pb-1 pt-1 text-xs font-medium text-ink-500">{formatDay(date)}</Text>
                   {list.map((e) => (
                     <EntryRow key={e.id} sub={sub} entry={e} onPress={() => setEditing(e)} />
@@ -202,7 +202,7 @@ export default function SubView({ category, sub }: { category: Category; sub: Su
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <View className="rounded-xl border border-ink-800 bg-ink-900/60 p-4" style={{ width: '47%' }}>
+    <View className="rounded-2xl border border-ink-800 bg-ink-900 p-4" style={{ width: '47%' }}>
       <Text className="text-xs text-ink-400">{label}</Text>
       <Text className="mt-1 text-xl font-semibold text-ink-100">{value}</Text>
     </View>
@@ -231,7 +231,7 @@ function ReminderCallout({ field, entry, date, onPress }: { field: Field; entry:
   const urgent = left <= 7;
   const label = entry.values.nombre ?? entry.values.tipo ?? field.label;
   return (
-    <Pressable onPress={onPress} className={`flex-row items-center gap-3 rounded-xl border-2 border-l-4 bg-ink-900/60 p-4 ${urgent ? 'border-gold-500' : 'border-ink-800'}`}>
+    <Pressable onPress={onPress} className={`flex-row items-center gap-3 rounded-2xl border-2 border-l-4 bg-ink-900 p-4 ${urgent ? 'border-gold-500' : 'border-ink-800'}`}>
       <Text className="text-2xl">⏰</Text>
       <View className="flex-1">
         <Text className="text-sm text-ink-400">{field.label}</Text>

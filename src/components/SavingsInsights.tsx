@@ -20,7 +20,7 @@ export default function SavingsInsights({ categoryId, subId, entries }: { catego
         const aportes = monthMoves.filter((e) => e.values.tipo === 'Aporte').reduce((a, e) => a + (Number(e.values.monto) || 0), 0);
         const retiros = monthMoves.filter((e) => e.values.tipo === 'Retiro').reduce((a, e) => a + (Number(e.values.monto) || 0), 0);
         return (
-          <View key={cur} className="rounded-xl border border-ink-800 bg-ink-900/60 p-4" style={{ width: '47%' }}>
+          <View key={cur} className="rounded-2xl border border-ink-800 bg-ink-900 p-4" style={{ width: '47%' }}>
             <Text className="text-sm text-ink-400">Ahorrado en {cur === 'ARS' ? 'pesos' : 'dólares'}</Text>
             <Text className="mt-1 text-2xl font-semibold text-ink-100">{formatCurrency(total[cur], cur)}</Text>
             {monthMoves.length > 0 ? (

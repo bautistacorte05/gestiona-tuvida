@@ -106,12 +106,12 @@ export function DayBars({ values, barClass, highlight, labels }: { values: numbe
 
 export function Empty({ children }: { children: React.ReactNode }) {
   return (
-    <View className="rounded-xl border border-dashed border-ink-800 p-6">
+    <View className="rounded-2xl border border-dashed border-ink-800 p-6">
       <Text className="text-center text-sm text-ink-500">{children}</Text>
     </View>
   );
 }
 
 export function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
-  return <View className={`rounded-xl border border-ink-800 bg-ink-900/60 p-4 ${className}`}>{children}</View>;
+  return <View className={`rounded-2xl border border-ink-800 bg-ink-900 p-4 ${className}`}>{children}</View>;
 }

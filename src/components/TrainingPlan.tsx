@@ -12,7 +12,7 @@ export default function TrainingPlan({ profile }: { profile: PetProfile }) {
   if (!profile.tipoAdiestramiento) {
     return (
       <Card>
-        <Text className="mb-1 font-semibold text-ink-100">Plan de adiestramiento</Text>
+        <Text className="mb-1 font-bold text-ink-100">Plan de adiestramiento</Text>
         <Text className="mb-3 text-sm text-ink-400">Elegí el tipo que mejor describe a {profile.nombre || 'tu mascota'} para ver un plan de pasos sugerido.</Text>
         <View className="gap-2">
           {TRAINING_CATEGORIES.map((c) => (
@@ -41,7 +41,7 @@ export default function TrainingPlan({ profile }: { profile: PetProfile }) {
       <Card>
         <View className="flex-row items-start justify-between gap-3">
           <View className="flex-1">
-            <Text className="font-semibold text-ink-100">{plan.label}</Text>
+            <Text className="font-bold text-ink-100">{plan.label}</Text>
             <Text className="mt-0.5 text-xs text-ink-400">{plan.description}</Text>
           </View>
           <Pressable onPress={() => updatePetProfile(profile.id, { tipoAdiestramiento: undefined })}>
@@ -60,7 +60,7 @@ export default function TrainingPlan({ profile }: { profile: PetProfile }) {
       {plan.stages.map((stage, i) => {
         const stageDone = stage.steps.filter((s) => doneIds.has(s.id)).length;
         return (
-          <View key={stage.id} className="rounded-xl border border-ink-800 bg-ink-900/60 p-4">
+          <View key={stage.id} className="rounded-2xl border border-ink-800 bg-ink-900 p-4">
             <Text className="mb-2 font-medium text-ink-100">
               {i + 1}. {stage.title} <Text className="text-xs text-ink-500">({stageDone}/{stage.steps.length})</Text>
             </Text>

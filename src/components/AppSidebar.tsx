@@ -223,7 +223,7 @@ export default function AppSidebar() {
           onPress={() => go('/ajustes')}
           accessibilityLabel="Perfil y ajustes"
           className={`flex-row items-center rounded-xl ${collapsed ? 'p-1' : 'flex-1 gap-3 p-1 pr-2'} ${pathname === '/ajustes' ? 'bg-shu-500/20' : 'hover:bg-ink-800/70'}`}>
-          <View style={{ borderRadius: 20, borderWidth: 2, borderColor: pathname === '/ajustes' ? '#bf3b2e' : 'transparent' }}>
+          <View style={{ borderRadius: 20, borderWidth: 2, borderColor: pathname === '/ajustes' ? c['shu-500'] : 'transparent' }}>
             <Avatar profile={profile} email={email} size={32} />
           </View>
           {!collapsed && (

@@ -4,6 +4,7 @@ import type { Category, Subcategory } from '../config/categories';
 import { PET_OWNED_SUBS, useDb, type Entry } from '../lib/db';
 import { today } from '../lib/dates';
 import { itemsTotal } from '../lib/prices';
+import { useThemeColors } from '../lib/theme';
 import { money } from './common';
 import DateField from './DateField';
 import ItemsEditor, { draftsToItems, parseNum, type ItemDraft } from './ItemsEditor';
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export default function EntryForm({ category, sub, entry, defaultDate, onClose }: Props) {
+  const c = useThemeColors();
   const saveEntry = useDb((s) => s.saveEntry);
   const deleteEntry = useDb((s) => s.deleteEntry);
   const activePetId = useDb((s) => s.activePetId);
@@ -98,7 +100,7 @@ export default function EntryForm({ category, sub, entry, defaultDate, onClose }
       <Pressable className="flex-1 justify-end bg-black/60" onPress={onClose}>
         <Pressable className="max-h-[88%] rounded-t-3xl border border-ink-800 bg-ink-900" onPress={(e) => e.stopPropagation()}>
           <View className="flex-row items-center justify-between border-b border-ink-800 px-5 py-3">
-            <Text className="text-lg font-semibold text-ink-100">
+            <Text className="text-lg font-bold text-ink-100">
               {sub.icon} {entry ? 'Editar' : 'Nuevo'} · {sub.name}
             </Text>
             <Pressable onPress={onClose} className="px-2 py-1" accessibilityLabel="Cerrar">
@@ -164,7 +166,7 @@ export default function EntryForm({ category, sub, entry, defaultDate, onClose }
                     value={values[f.key] as string}
                     onChangeText={(t) => setValues((v) => ({ ...v, [f.key]: t }))}
                     placeholder={f.money ? '0' : undefined}
-                    placeholderTextColor="#877a61"
+                    placeholderTextColor={c['ink-500']}
                   />
                 )}
               </View>

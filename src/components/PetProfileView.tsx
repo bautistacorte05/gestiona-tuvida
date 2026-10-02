@@ -8,6 +8,7 @@ import { TRAINING_CATEGORIES, type TrainingCategory } from '../config/training';
 import { useDb, type PetProfile } from '../lib/db';
 import { formatDay, today } from '../lib/dates';
 import { pickAndResizeImage } from '../lib/image';
+import { useThemeColors } from '../lib/theme';
 import DateField from './DateField';
 import PetSwitcher from './PetSwitcher';
 import BackButton from './BackButton';
@@ -40,6 +41,7 @@ export default function PetProfileView() {
 }
 
 function PetProfileForm({ profile }: { profile?: PetProfile }) {
+  const c = useThemeColors();
   const updatePetProfile = useDb((s) => s.updatePetProfile);
   const archivePetProfile = useDb((s) => s.archivePetProfile);
   const cardRef = useRef<View>(null);
@@ -113,7 +115,7 @@ function PetProfileForm({ profile }: { profile?: PetProfile }) {
 
   if (editing) {
     return (
-      <View className="gap-3 rounded-xl border border-ink-800 bg-ink-900/60 p-4">
+      <View className="gap-3 rounded-2xl border border-ink-800 bg-ink-900 p-4">
         <View className="flex-row items-center gap-3">
           <Pressable onPress={onPickPhoto} className="h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-ink-700 bg-ink-800">
             {foto ? <Image source={{ uri: foto }} style={{ width: 80, height: 80 }} /> : <Text className="text-3xl">🐾</Text>}
@@ -124,12 +126,12 @@ function PetProfileForm({ profile }: { profile?: PetProfile }) {
         </View>
         <View>
           <Text className="mb-1 text-sm text-ink-400">Nombre</Text>
-          <TextInput className="rounded-lg border border-ink-700 bg-ink-900 px-3 py-2.5 text-base text-ink-100" placeholder="Ej: Kofi" placeholderTextColor="#877a61" value={nombre} onChangeText={setNombre} />
+          <TextInput className="rounded-lg border border-ink-700 bg-ink-900 px-3 py-2.5 text-base text-ink-100" placeholder="Ej: Kofi" placeholderTextColor={c['ink-500']} value={nombre} onChangeText={setNombre} />
         </View>
         <View className="flex-row gap-2">
           <View className="flex-1">
             <Text className="mb-1 text-sm text-ink-400">Raza</Text>
-            <TextInput className="rounded-lg border border-ink-700 bg-ink-900 px-3 py-2.5 text-base text-ink-100" placeholder="Ej: Caniche Toy" placeholderTextColor="#877a61" value={raza} onChangeText={setRaza} />
+            <TextInput className="rounded-lg border border-ink-700 bg-ink-900 px-3 py-2.5 text-base text-ink-100" placeholder="Ej: Caniche Toy" placeholderTextColor={c['ink-500']} value={raza} onChangeText={setRaza} />
           </View>
           <View className="flex-1">
             <Text className="mb-1 text-sm text-ink-400">Nacimiento</Text>
@@ -141,7 +143,7 @@ function PetProfileForm({ profile }: { profile?: PetProfile }) {
           <TextInput
             className="rounded-lg border border-ink-700 bg-ink-900 px-3 py-2.5 text-base text-ink-100"
             placeholder="Ej: 11 2345 6789"
-            placeholderTextColor="#877a61"
+            placeholderTextColor={c['ink-500']}
             keyboardType="phone-pad"
             value={telefono}
             onChangeText={setTelefono}
@@ -223,6 +225,7 @@ const formatKg = (kg: number) => `${kg.toLocaleString('es-AR', { maximumFraction
 
 /** Peso actual + historial (antes era la sección "Peso"; los registros viejos se migraron acá). */
 function WeightCard({ profile }: { profile: PetProfile }) {
+  const c = useThemeColors();
   const [kg, setKg] = useState('');
   const history = [...(profile.pesos ?? [])].reverse();
   const current = history[0];
@@ -235,9 +238,9 @@ function WeightCard({ profile }: { profile: PetProfile }) {
   };
 
   return (
-    <View className="gap-3 rounded-xl border border-ink-800 bg-ink-900/60 p-4">
+    <View className="gap-3 rounded-2xl border border-ink-800 bg-ink-900 p-4">
       <View className="flex-row items-baseline justify-between">
-        <Text className="text-base font-semibold text-ink-100">⚖️ Peso</Text>
+        <Text className="text-base font-bold text-ink-100">⚖️ Peso</Text>
         {current && (
           <Text className="text-sm text-ink-400">
             <Text className="text-lg font-semibold text-ink-100">{formatKg(current.kg)}</Text> · {formatDay(current.date, { day: 'numeric', month: 'short' })}
@@ -248,7 +251,7 @@ function WeightCard({ profile }: { profile: PetProfile }) {
         <TextInput
           className="flex-1 rounded-lg border border-ink-700 bg-ink-900 px-3 py-2.5 text-base text-ink-100"
           placeholder="Peso de hoy en kg, ej: 8,5"
-          placeholderTextColor="#877a61"
+          placeholderTextColor={c['ink-500']}
           keyboardType="decimal-pad"
           value={kg}
           onChangeText={setKg}

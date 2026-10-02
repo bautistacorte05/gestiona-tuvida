@@ -4,6 +4,7 @@ import { Pressable, Text, TextInput, View } from 'react-native';
 import { formatDay, today } from '../lib/dates';
 import { useDb, type DailyGoal, type DayTask, type FixedTask } from '../lib/db';
 import { computeStreak } from '../lib/streak';
+import { useThemeColors } from '../lib/theme';
 import TimeField from './TimeField';
 
 const WEEKDAYS = [
@@ -112,6 +113,7 @@ function Row({ item }: { item: Item }) {
 }
 
 function AddTask({ date }: { date: string }) {
+  const c = useThemeColors();
   const [title, setTitle] = useState('');
   const [time, setTime] = useState('');
   const [repeat, setRepeat] = useState(false);
@@ -138,7 +140,7 @@ function AddTask({ date }: { date: string }) {
         <TextInput
           className="flex-1 rounded-lg border border-ink-700 bg-ink-900 px-3 py-2.5 text-base text-ink-100"
           placeholder="Agregar tarea, ej: Llamar al veterinario"
-          placeholderTextColor="#877a61"
+          placeholderTextColor={c['ink-500']}
           value={title}
           onChangeText={setTitle}
           onSubmitEditing={add}
@@ -230,9 +232,9 @@ export default function DayPlan({ date }: { date: string }) {
   const isToday = date === today();
 
   return (
-    <View className="gap-3 rounded-xl border border-ink-800 bg-ink-900/60 p-4">
+    <View className="gap-3 rounded-2xl border border-ink-800 bg-ink-900 p-4">
       <View className="flex-row items-center justify-between">
-        <Text className="text-base font-semibold text-ink-100">📝 Plan del día</Text>
+        <Text className="text-base font-bold text-ink-100">📝 Plan del día</Text>
         {items.length > 0 && (
           <Text className="text-sm text-ink-400">
             {doneCount}/{items.length}

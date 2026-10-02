@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDb } from '../lib/db';
 import { formatDay, shiftDay, today } from '../lib/dates';
 import { computeStreak } from '../lib/streak';
+import { useThemeColors } from '../lib/theme';
 import { Empty, Stepper } from './common';
 import BackButton from './BackButton';
 import ScreenTitle from './ScreenTitle';
@@ -12,6 +13,7 @@ import ScreenTitle from './ScreenTitle';
 const goalCatId = (id: string) => `goal:${id}`;
 
 export default function DailyGoalsView() {
+  const c = useThemeColors();
   const [date, setDate] = useState(today);
   const [title, setTitle] = useState('');
   const addDailyGoal = useDb((s) => s.addDailyGoal);
@@ -52,7 +54,7 @@ export default function DailyGoalsView() {
           <TextInput
             className="flex-1 rounded-lg border border-ink-700 bg-ink-900 px-3 py-2.5 text-base text-ink-100"
             placeholder="Nueva meta diaria, ej: Meditar 10 min"
-            placeholderTextColor="#877a61"
+            placeholderTextColor={c['ink-500']}
             value={title}
             onChangeText={setTitle}
           />
@@ -69,7 +71,7 @@ export default function DailyGoalsView() {
               const checked = done.has(goalCatId(g.id));
               const streak = computeStreak(allChecks, goalCatId(g.id));
               return (
-                <View key={g.id} className={`flex-row items-center gap-3 rounded-xl border-2 p-3 ${checked ? 'border-moss-500 bg-moss-500/15' : 'border-ink-800 bg-ink-900/60'}`}>
+                <View key={g.id} className={`flex-row items-center gap-3 rounded-2xl border-2 p-3 ${checked ? 'border-moss-500 bg-moss-500/15' : 'border-ink-800 bg-ink-900'}`}>
                   <Pressable
                     onPress={() => toggleCheck(date, goalCatId(g.id))}
                     accessibilityLabel={`${g.title}: ${checked ? 'hecho' : 'sin hacer'}`}
