@@ -1,7 +1,8 @@
 // Configuración central de categorías y subcategorías.
 // Para agregar una categoría nueva alcanza con sumar un objeto a CATEGORIES.
 
-export type FieldType = 'number' | 'text' | 'select' | 'date'
+/** 'time' = hora "HH:MM" (se muestra tal cual y nunca se suma). */
+export type FieldType = 'number' | 'text' | 'select' | 'date' | 'time'
 export type Aggregate = 'sum' | 'avg'
 
 export interface Field {
@@ -250,6 +251,7 @@ export const CATEGORIES: Category[] = [
           { key: 'autor', label: 'Autor', type: 'text' },
           { key: 'estado', label: 'Estado', type: 'select', options: ['Pendiente', 'Leyendo', 'Terminado', 'Abandonado'], required: true },
           { key: 'puntaje', label: 'Puntaje (1-5)', type: 'number', aggregate: 'avg' },
+          { key: 'paginasTotales', label: 'Páginas del libro', type: 'number' },
         ],
       },
       {
@@ -322,6 +324,8 @@ export const CATEGORIES: Category[] = [
         fields: [
           { key: 'horas', label: 'Horas', type: 'number', unit: 'h', required: true, aggregate: 'avg' },
           { key: 'calidad', label: 'Calidad', type: 'select', options: ['Muy buena', 'Buena', 'Regular', 'Mala'] },
+          { key: 'acostarse', label: 'Me acosté', type: 'time' },
+          { key: 'levantarse', label: 'Me levanté', type: 'time' },
         ],
       },
       {
