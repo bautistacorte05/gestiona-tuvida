@@ -68,11 +68,14 @@ export function byDefaultOrder(a: PlanTask, b: PlanTask) {
   return a.createdAt - b.createdAt;
 }
 
-/** Tareas del día en el orden por defecto (sin el orden manual). */
+/**
+ * Tareas del día en el orden por defecto (sin el orden manual). Las descartadas en "Pendientes"
+ * siguen apareciendo en su día (sin tildar): descartar solo deja de arrastrarlas.
+ */
 export function tasksOfDate(date: string, dayTasks: DayTask[], fixedTasks: FixedTask[], checked: Set<string>): PlanTask[] {
   const out: PlanTask[] = [];
   for (const t of dayTasks) {
-    if (t.date !== date || t.dismissed) continue;
+    if (t.date !== date) continue;
     out.push({ key: dayTaskKey(t.id), kind: 'day', id: t.id, title: t.title, time: t.time, done: !!t.done, createdAt: t.createdAt });
   }
   for (const f of fixedTasks) {
