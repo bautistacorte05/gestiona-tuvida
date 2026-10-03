@@ -2,8 +2,11 @@ import { useMemo, useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
 
 import { formatDay, today } from '../lib/dates';
-import { useDb, type DayTask, type FixedTask } from '../lib/db';
+import { moveKey, orderedTasksOfDate, setTaskDone, type PlanTask } from '../lib/dayTasks';
+import { useDb } from '../lib/db';
+import { goToSub } from '../lib/nav';
 import { useThemeColors } from '../lib/theme';
+import FocusTimer from './FocusTimer';
 import { CheckSquare } from './HabitPanel';
 import TimeField from './TimeField';
 import TrashButton from './TrashButton';
@@ -20,79 +23,77 @@ const WEEKDAYS = [
 const EVERY_DAY = [0, 1, 2, 3, 4, 5, 6];
 const WORKDAYS = [1, 2, 3, 4, 5];
 
-type Item = {
-  key: string;
-  title: string;
-  time?: string;
-  done: boolean;
-  createdAt: number;
-  toggle: () => void;
-  remove?: () => void;
-  badge?: string;
-};
-
-// Las tareas fijas guardan el tilde de cada día en `checks` (como las actividades y las metas diarias).
-const taskCheckId = (id: string) => `task:${id}`;
-
-function buildItems(date: string, tasks: DayTask[], fixed: FixedTask[], checked: Set<string>) {
-  const weekday = new Date(`${date}T00:00:00`).getDay();
-  const dayEnd = new Date(`${date}T23:59:59`).getTime();
-  const { toggleCheck, updateDayTask, deleteDayTask, archiveFixedTask } = useDb.getState();
-  const items: Item[] = [];
-
-  for (const t of tasks) {
-    if (t.date !== date) continue;
-    items.push({
-      key: t.id,
-      title: t.title,
-      time: t.time,
-      done: !!t.done,
-      createdAt: t.createdAt,
-      toggle: () => updateDayTask(t.id, { done: !t.done }),
-      remove: () => deleteDayTask(t.id),
-    });
-  }
-  for (const f of fixed) {
-    // Aparece los días elegidos, desde que se creó y hasta el día anterior a dejar de repetirla.
-    if (!f.weekdays.includes(weekday) || f.createdAt > dayEnd || (f.archivedAt && f.archivedAt <= dayEnd)) continue;
-    items.push({
-      key: f.id,
-      title: f.title,
-      time: f.time,
-      done: checked.has(taskCheckId(f.id)),
-      createdAt: f.createdAt,
-      toggle: () => toggleCheck(date, taskCheckId(f.id)),
-      remove: () => archiveFixedTask(f.id),
-      badge: '🔁',
-    });
-  }
-
-  // Primero lo que tiene hora (en orden), después el resto en el orden en que se cargó.
-  return items.sort((a, b) => {
-    if (a.time && b.time) return a.time.localeCompare(b.time);
-    if (a.time) return -1;
-    if (b.time) return 1;
-    return a.createdAt - b.createdAt;
-  });
+/** Tilda o destilda una tarea ese día (sueltas: `done`; fijas: un tilde en `checks`). */
+function toggleTask(date: string, task: PlanTask) {
+  setTaskDone(useDb.getState(), date, task.key, !task.done);
 }
 
-function Row({ item }: { item: Item }) {
+function removeTask(task: PlanTask) {
+  const { deleteDayTask, archiveFixedTask } = useDb.getState();
+  if (task.kind === 'day') deleteDayTask(task.id);
+  else archiveFixedTask(task.id);
+}
+
+function TaskTitle({ task }: { task: PlanTask }) {
   return (
-    <View className="flex-row items-center gap-3 py-1.5">
+    // Márgenes explícitos (no gap-x): en el celular el gap entre textos no se aplicaba y la hora quedaba pegada.
+    <>
+      {!!task.time && <Text className={`mr-2 text-sm font-semibold ${task.done ? 'text-ink-500' : 'text-shu-400'}`}>{task.time}</Text>}
+      <Text className={`mr-2 text-base ${task.done ? 'text-ink-500 line-through' : 'text-ink-100'}`}>{task.title}</Text>
+      {task.kind === 'fixed' && <Text className="text-xs text-ink-400">🔁</Text>}
+    </>
+  );
+}
+
+function Row({ task, date, onFocus }: { task: PlanTask; date: string; onFocus: () => void }) {
+  const toggle = () => toggleTask(date, task);
+  return (
+    <View className="flex-row items-center gap-2 py-1">
       {/* El mismo cuadradito que la grilla de hábitos. */}
-      <CheckSquare state={item.done ? 'done' : 'missed'} size={26} label={`${item.title}: ${item.done ? 'hecho' : 'sin hacer'}`} onPress={item.toggle} />
-      {/* Márgenes explícitos (no gap-x): en el celular el gap entre textos no se aplicaba y la hora quedaba pegada. */}
-      <Pressable onPress={item.toggle} className="flex-1 flex-row flex-wrap items-center">
-        {!!item.time && <Text className={`mr-2 text-sm font-semibold ${item.done ? 'text-ink-500' : 'text-shu-400'}`}>{item.time}</Text>}
-        <Text className={`mr-2 text-base ${item.done ? 'text-ink-500 line-through' : 'text-ink-100'}`}>{item.title}</Text>
-        {!!item.badge && <Text className="text-xs text-ink-400">{item.badge}</Text>}
+      <CheckSquare state={task.done ? 'done' : 'missed'} size={26} label={`${task.title}: ${task.done ? 'hecho' : 'sin hacer'}`} onPress={toggle} />
+      <Pressable onPress={toggle} className="ml-1 flex-1 flex-row flex-wrap items-center">
+        <TaskTitle task={task} />
       </Pressable>
-      {!!item.remove &&
-        (item.badge === '🔁' ? (
-          <TrashButton what={`la tarea fija "${item.title}"`} detail="Deja de aparecer desde este día. Los días anteriores quedan como estaban." onDelete={item.remove} />
-        ) : (
-          <TrashButton what={`la tarea "${item.title}"`} onDelete={item.remove} />
-        ))}
+      <Pressable
+        onPress={onFocus}
+        accessibilityRole="button"
+        accessibilityLabel={`Temporizador para ${task.title}`}
+        className="h-11 w-11 items-center justify-center rounded-xl bg-shu-500/15 active:bg-shu-500/30">
+        <Text className="text-lg">⏱️</Text>
+      </Pressable>
+      {task.kind === 'fixed' ? (
+        <TrashButton what={`la tarea fija "${task.title}"`} detail="Deja de aparecer desde este día. Los días anteriores quedan como estaban." onDelete={() => removeTask(task)} />
+      ) : (
+        <TrashButton what={`la tarea "${task.title}"`} onDelete={() => removeTask(task)} />
+      )}
+    </View>
+  );
+}
+
+function MoveButton({ dir, title, disabled, onPress }: { dir: 'up' | 'down'; title: string; disabled: boolean; onPress: () => void }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      accessibilityRole="button"
+      accessibilityLabel={`${dir === 'up' ? 'Subir' : 'Bajar'} ${title}`}
+      accessibilityState={{ disabled }}
+      className={`h-11 w-11 items-center justify-center rounded-xl border border-ink-700 bg-ink-800 active:bg-ink-700 ${disabled ? 'opacity-30' : ''}`}>
+      <Text className="text-lg font-bold text-ink-100">{dir === 'up' ? '↑' : '↓'}</Text>
+    </Pressable>
+  );
+}
+
+/** Fila en modo "Ordenar": número de lugar y flechas para subirla o bajarla. */
+function OrderRow({ task, index, count, onMove }: { task: PlanTask; index: number; count: number; onMove: (delta: -1 | 1) => void }) {
+  return (
+    <View className="min-h-[52px] flex-row items-center gap-2 py-1">
+      <Text className="w-6 text-center text-sm font-bold text-ink-500">{index + 1}</Text>
+      <View className="flex-1 flex-row flex-wrap items-center">
+        <TaskTitle task={task} />
+      </View>
+      <MoveButton dir="up" title={task.title} disabled={index === 0} onPress={() => onMove(-1)} />
+      <MoveButton dir="down" title={task.title} disabled={index === count - 1} onPress={() => onMove(1)} />
     </View>
   );
 }
@@ -201,44 +202,82 @@ function PendingFromBefore() {
   );
 }
 
-/** Hoy → "Plan del día": tareas sueltas del día y tareas fijas de ese día de la semana (las metas diarias van en la grilla). */
+/**
+ * Hoy → "Plan del día": tareas sueltas del día y tareas fijas de ese día de la semana (las metas
+ * diarias van en la grilla). Se pueden ordenar a mano ("Ordenar") y abrir un temporizador de
+ * enfoque (⏱️) para cada una. El orden y las tareas salen de `lib/dayTasks.ts` (igual que Mi semana).
+ */
 export default function DayPlan({ date }: { date: string }) {
-  const tasks = useDb((s) => s.dayTasks);
-  const fixed = useDb((s) => s.fixedTasks);
-  const allChecks = useDb((s) => s.checks);
+  const dayTasks = useDb((s) => s.dayTasks);
+  const fixedTasks = useDb((s) => s.fixedTasks);
+  const checks = useDb((s) => s.checks);
+  const dayOrders = useDb((s) => s.dayOrders);
+  // Se ordena el día en que se tocó "Ordenar": al cambiar de día en Hoy, sale solo del modo.
+  const [orderingDate, setOrderingDate] = useState<string | null>(null);
+  const [focus, setFocus] = useState<{ date: string; key: string; title: string } | null>(null);
 
-  const items = useMemo(() => {
-    const checked = new Set(allChecks.filter((c) => c.date === date).map((c) => c.categoryId));
-    return buildItems(date, tasks, fixed, checked);
-  }, [date, tasks, fixed, allChecks]);
+  const items = useMemo(() => orderedTasksOfDate(date, { dayTasks, fixedTasks, checks, dayOrders }), [date, dayTasks, fixedTasks, checks, dayOrders]);
 
+  const ordering = orderingDate === date;
   const doneCount = items.filter((i) => i.done).length;
   const isToday = date === today();
 
+  // Cada movida guarda el orden completo de ese día.
+  const move = (index: number, delta: -1 | 1) =>
+    useDb.getState().setDayOrder(
+      date,
+      moveKey(
+        items.map((i) => i.key),
+        index,
+        delta,
+      ),
+    );
+
   return (
     <View className="gap-3 rounded-2xl border border-ink-800 bg-ink-900 p-4">
-      <View className="flex-row items-center justify-between">
-        <Text className="text-base font-bold text-ink-100">📝 Plan del día</Text>
-        {items.length > 0 && (
-          <Text className="text-sm text-ink-400">
-            {doneCount}/{items.length}
-          </Text>
-        )}
+      <View className="flex-row items-center justify-between gap-2">
+        <Text className="shrink text-base font-bold text-ink-100">📝 Plan del día</Text>
+        <View className="flex-row items-center gap-3">
+          {items.length > 0 && (
+            <Text className="text-sm text-ink-400">
+              {doneCount}/{items.length}
+            </Text>
+          )}
+          {(ordering || items.length > 1) && (
+            <Pressable
+              onPress={() => setOrderingDate(ordering ? null : date)}
+              accessibilityRole="button"
+              accessibilityLabel={ordering ? 'Terminar de ordenar' : 'Ordenar las tareas'}
+              className={`h-11 items-center justify-center rounded-xl border px-3.5 ${ordering ? 'border-shu-500 bg-shu-500' : 'border-ink-700 active:bg-ink-800'}`}>
+              <Text className={`text-sm font-semibold ${ordering ? 'text-washi' : 'text-ink-300'}`}>{ordering ? 'Listo' : 'Ordenar'}</Text>
+            </Pressable>
+          )}
+        </View>
       </View>
 
       {isToday && <PendingFromBefore />}
 
       {items.length ? (
         <View>
-          {items.map((item) => (
-            <Row key={item.key} item={item} />
-          ))}
+          {items.map((task, i) =>
+            ordering ? (
+              <OrderRow key={task.key} task={task} index={i} count={items.length} onMove={(delta) => move(i, delta)} />
+            ) : (
+              <Row key={task.key} task={task} date={date} onFocus={() => setFocus({ date, key: task.key, title: task.title })} />
+            ),
+          )}
         </View>
       ) : (
         <Text className="text-sm text-ink-400">Todavía no hay nada para este día. Agregá lo que tenés que hacer.</Text>
       )}
 
-      <AddTask date={date} />
+      {ordering ? <Text className="text-xs text-ink-500">Usá las flechas para cambiar el orden. Tocá &quot;Listo&quot; cuando termines.</Text> : <AddTask date={date} />}
+
+      <Pressable onPress={() => goToSub('semana', 'plan')} accessibilityRole="link" className="min-h-11 justify-center self-start">
+        <Text className="text-sm font-semibold text-shu-400">Ver la semana →</Text>
+      </Pressable>
+
+      {!!focus && <FocusTimer date={focus.date} taskKey={focus.key} title={focus.title} onClose={() => setFocus(null)} />}
     </View>
   );
 }
