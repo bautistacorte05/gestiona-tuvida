@@ -26,10 +26,16 @@ export function useCategoryName() {
   return useCallback((categoryId: string, fallback: string) => categories.find((c) => c.id === categoryId)?.name ?? fallback, [categories]);
 }
 
-/** Categorías para mostrar en los menús: con nombres personalizados y sin subcategorías `hidden`. */
+/**
+ * Categorías para mostrar en los menús: con nombres personalizados, sin subcategorías `hidden` y con
+ * las categorías de varias secciones (sin `landing`, se despliegan con acordeón) al final de la lista.
+ */
 export function useMenuCategories(): Category[] {
   const categories = useCategories();
-  return useMemo(() => categories.map((cat) => ({ ...cat, subcategories: cat.subcategories.filter((s) => !s.hidden) })), [categories]);
+  return useMemo(() => {
+    const visible = categories.map((cat) => ({ ...cat, subcategories: cat.subcategories.filter((s) => !s.hidden) }));
+    return [...visible].sort((a, b) => Number(!a.landing) - Number(!b.landing));
+  }, [categories]);
 }
 
 /** Categoría + subcategoría con nombres personalizados (o undefined si no existe). */

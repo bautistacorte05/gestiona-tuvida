@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { router, usePathname } from 'expo-router';
 import { useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, View, type TextStyle } from 'react-native';
@@ -6,6 +7,7 @@ import { COLOR_CLASSES } from '../config/categories';
 import Avatar from './Avatar';
 import { useAuth } from '../lib/auth';
 import { useDb } from '../lib/db';
+import { categoryIcon, subIcon, TOP_ICONS, type MenuIconName } from '../lib/menuIcons';
 import { useMenuCategories } from '../lib/names';
 import { signOutWithConfirm } from '../lib/signOut';
 import { useThemeColors } from '../lib/theme';
@@ -15,11 +17,11 @@ const EXPANDED_WIDTH = 256;
 const COLLAPSED_WIDTH = 64;
 
 /** `hint`: lo que dice el cartelito al pasar el mouse con la barra achicada. */
-type Item = { id: string; icon: string; label: string; hint: string };
+type Item = { id: string; icon: MenuIconName; label: string; hint: string };
 
 const TOP_ITEMS: (Item & { href: string })[] = [
-  { id: '/', href: '/', icon: '📅', label: 'Hoy', hint: 'Hoy' },
-  { id: '/mes', href: '/mes', icon: '📈', label: 'Mes', hint: 'Resumen del mes' },
+  { id: '/', href: '/', icon: TOP_ICONS.hoy, label: 'Hoy', hint: 'Hoy' },
+  { id: '/mes', href: '/mes', icon: TOP_ICONS.mes, label: 'Mes', hint: 'Resumen del mes' },
 ];
 
 // Efecto "Dock" de la Mac con la barra achicada: el ícono bajo el mouse crece y sus vecinos un poco.
@@ -47,6 +49,7 @@ function SidebarItem({
   onTip: (tip: Tip | null) => void;
 }) {
   const ref = useRef<View>(null);
+  const c = useThemeColors();
 
   const hoverIn = () => {
     if (!collapsed) return;
@@ -69,9 +72,7 @@ function SidebarItem({
       className={`mx-2 flex-row items-center rounded-xl ${collapsed ? 'h-10 justify-center' : 'gap-3 px-3 py-2'} ${
         active ? 'bg-shu-500' : 'hover:bg-ink-800/70 active:bg-ink-800'
       }`}>
-      <Text className="text-base" style={[SMOOTH, { transform: [{ scale }] }]}>
-        {item.icon}
-      </Text>
+      <Ionicons name={item.icon} size={18} color={c['shu-400']} style={[SMOOTH, { transform: [{ scale }] }]} />
       {!collapsed && (
         <Text numberOfLines={1} className={`flex-1 text-sm ${active ? 'font-semibold text-washi' : 'text-ink-300'}`}>
           {item.label}
@@ -183,7 +184,7 @@ export default function AppSidebar() {
         {collapsed ? (
           <View className="gap-0.5">
             {categories.map((cat) => {
-              const item = { id: `cat:${cat.id}`, icon: cat.icon, label: cat.name, hint: cat.name };
+              const item = { id: `cat:${cat.id}`, icon: categoryIcon(cat.id), label: cat.name, hint: cat.name };
               // Con hoja propia va directo a la hoja; si no, agranda la barra con la categoría abierta.
               const onPress = cat.landing ? () => go(`/c/${cat.id}/${cat.landing}`) : () => openCategory(cat.id);
               return <SidebarItem key={item.id} {...itemProps(item, cat.id === currentCat, onPress)} />;
@@ -194,7 +195,7 @@ export default function AppSidebar() {
             // Categoría con hoja propia: una sola entrada, directo a la hoja (sin desplegar secciones).
             if (cat.landing) {
               const href = `/c/${cat.id}/${cat.landing}`;
-              const item = { id: `cat:${cat.id}`, icon: cat.icon, label: cat.name, hint: cat.name };
+              const item = { id: `cat:${cat.id}`, icon: categoryIcon(cat.id), label: cat.name, hint: cat.name };
               return <SidebarItem key={item.id} {...itemProps(item, cat.id === currentCat, () => go(href))} />;
             }
             const open = isOpen(cat.id);
@@ -204,7 +205,7 @@ export default function AppSidebar() {
                   onPress={() => setToggled((t) => ({ ...t, [cat.id]: !open }))}
                   accessibilityLabel={cat.name}
                   className="mx-2 flex-row items-center gap-3 rounded-xl px-3 py-2 hover:bg-ink-800/70 active:bg-ink-800">
-                  <Text className="text-base">{cat.icon}</Text>
+                  <Ionicons name={categoryIcon(cat.id)} size={18} color={c['shu-400']} />
                   <Text numberOfLines={1} className={`flex-1 text-sm font-medium ${cat.id === currentCat ? COLOR_CLASSES[cat.color].text : 'text-ink-200'}`}>
                     {cat.name}
                   </Text>
@@ -214,7 +215,7 @@ export default function AppSidebar() {
                   <View className="mb-1 ml-6 gap-0.5 border-l border-ink-800">
                     {cat.subcategories.map((sub) => {
                       const href = `/c/${cat.id}/${sub.id}`;
-                      const item = { id: href, icon: sub.icon, label: sub.name, hint: `${cat.name} · ${sub.name}` };
+                      const item = { id: href, icon: subIcon(cat.id, sub.id), label: sub.name, hint: `${cat.name} · ${sub.name}` };
                       return <SidebarItem key={href} {...itemProps(item, pathname === href, () => go(href))} />;
                     })}
                   </View>
