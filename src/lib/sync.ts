@@ -309,6 +309,12 @@ function clearLocalData() {
       dayTasks: [],
       fixedTasks: [],
       customNames: [],
+      notes: [],
+      rituals: [],
+      dayOrders: [],
+      dayPrizes: [],
+      focusSessions: [],
+      lifeWheel: [],
       sync: { pending: {}, stamps: {}, tombstones: {} },
     }),
   );

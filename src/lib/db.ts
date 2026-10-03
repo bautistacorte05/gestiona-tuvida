@@ -151,6 +151,75 @@ export interface UserProfile {
   accent?: AccentId
   /** Meta de horas de trabajo por semana (hoja de Trabajo). Sin valor = 40. */
   metaHorasSemana?: number
+  /** Pasos del ritual de la mañana que usa (ids de config/ritual.ts). Sin valor = todos. */
+  ritualPasos?: string[]
+  updatedAt: number
+}
+
+/** Nota suelta (Anotaciones). kind 'pregunta' = respuesta a la Pregunta del día de Hoy (title = la pregunta). */
+export interface Note {
+  id: string
+  title: string
+  body: string
+  pinned?: boolean
+  kind?: 'pregunta'
+  /** YYYY-MM-DD del día al que pertenece (las respuestas a la pregunta del día). */
+  date?: string
+  /** Id de la pregunta respondida (config/questions.ts). */
+  questionId?: string
+  createdAt: number
+  updatedAt: number
+}
+
+/** Ritual de la mañana de un día (id = fecha YYYY-MM-DD). */
+export interface RitualDay {
+  id: string
+  /** Pasos tildados (ids de config/ritual.ts). */
+  steps: string[]
+  /** Las cosas que agradeció. */
+  gratitude?: string[]
+  /** Palabra guía del día. */
+  word?: string
+  /** Lo más importante del día (se agrega como tarea de Hoy). */
+  focus?: string
+  /** Id de la tarea de Hoy creada con `focus`. */
+  focusTaskId?: string
+  /** Cuándo lo terminó (ms). Sin valor = no terminado. Es lo que cuenta para la racha. */
+  doneAt?: number
+  updatedAt: number
+}
+
+/** Orden manual de las tareas de un día (id = fecha). Claves: `day:<id de DayTask>` o `fixed:<id de FixedTask>`. */
+export interface DayOrder {
+  id: string
+  keys: string[]
+  updatedAt: number
+}
+
+/** Premio de un día del planificador semanal (id = fecha): se gana terminando todas las tareas de ese día. */
+export interface DayPrize {
+  id: string
+  text: string
+  updatedAt: number
+}
+
+/** Tanda terminada del temporizador de enfoque. */
+export interface FocusSession {
+  id: string
+  /** YYYY-MM-DD */
+  date: string
+  minutes: number
+  /** Tarea en la que trabajó: `day:<id>` o `fixed:<id>`. */
+  taskKey?: string
+  /** Título de la tarea en ese momento (por si después se borra). */
+  title?: string
+  createdAt: number
+}
+
+/** Rueda de la vida de un mes (id = 'YYYY-MM'). scores: id de área (config/lifeWheel.ts) → 1 a 10. */
+export interface LifeWheelMonth {
+  id: string
+  scores: Record<string, number>
   updatedAt: number
 }
 
@@ -176,6 +245,12 @@ export const SYNCED_COLLECTIONS = [
   'dayTasks',
   'fixedTasks',
   'customNames',
+  'notes',
+  'rituals',
+  'dayOrders',
+  'dayPrizes',
+  'focusSessions',
+  'lifeWheel',
 ] as const
 export type SyncedCollection = (typeof SYNCED_COLLECTIONS)[number]
 
@@ -216,6 +291,12 @@ interface DbState {
   dayTasks: DayTask[]
   fixedTasks: FixedTask[]
   customNames: CustomName[]
+  notes: Note[]
+  rituals: RitualDay[]
+  dayOrders: DayOrder[]
+  dayPrizes: DayPrize[]
+  focusSessions: FocusSession[]
+  lifeWheel: LifeWheelMonth[]
 }
 
 interface DbActions {
@@ -240,13 +321,24 @@ interface DbActions {
   deletePetWalk: (id: string) => void
   toggleTrainingStep: (petId: string, stepId: string) => void
   updateUserProfile: (patch: Partial<Omit<UserProfile, 'id' | 'updatedAt'>>) => void
-  addDayTask: (date: string, title: string, time?: string) => void
+  /** Devuelve el id de la tarea nueva. */
+  addDayTask: (date: string, title: string, time?: string) => string
   updateDayTask: (id: string, patch: Partial<Pick<DayTask, 'date' | 'done' | 'dismissed' | 'title' | 'time'>>) => void
   deleteDayTask: (id: string) => void
   addFixedTask: (title: string, weekdays: number[], time?: string) => void
   archiveFixedTask: (id: string) => void
   /** Nombre vacío = volver al nombre original. */
   setCustomName: (id: string, name: string) => void
+  /** Crea (sin id) o actualiza una nota. Devuelve su id. */
+  saveNote: (note: Omit<Note, 'id' | 'createdAt' | 'updatedAt'> & { id?: string }) => string
+  deleteNote: (id: string) => void
+  /** Crea o actualiza el ritual de ese día. */
+  saveRitual: (date: string, patch: Partial<Omit<RitualDay, 'id' | 'updatedAt'>>) => void
+  setDayOrder: (date: string, keys: string[]) => void
+  /** Texto vacío = sacar el premio de ese día. */
+  setDayPrize: (date: string, text: string) => void
+  addFocusSession: (session: Omit<FocusSession, 'id' | 'createdAt'>) => string
+  setLifeWheelScore: (month: string, areaId: string, score: number) => void
   importAll: (json: string) => number
 }
 
@@ -269,6 +361,12 @@ export const useDb = create<DbState & DbActions>()(
       dayTasks: [],
       fixedTasks: [],
       customNames: [],
+      notes: [],
+      rituals: [],
+      dayOrders: [],
+      dayPrizes: [],
+      focusSessions: [],
+      lifeWheel: [],
 
       saveEntry: (entry) => {
         const now = Date.now()
@@ -368,8 +466,10 @@ export const useDb = create<DbState & DbActions>()(
         set((s) => ({ userProfile: [{ ...s.userProfile[0], ...patch, id: 'me', updatedAt: Date.now() }] })),
 
       addDayTask: (date, title, time) => {
+        const id = uuid()
         const now = Date.now()
-        set((s) => ({ dayTasks: [...s.dayTasks, { id: uuid(), date, title: title.trim(), time: time || undefined, createdAt: now, updatedAt: now }] }))
+        set((s) => ({ dayTasks: [...s.dayTasks, { id, date, title: title.trim(), time: time || undefined, createdAt: now, updatedAt: now }] }))
+        return id
       },
       updateDayTask: (id, patch) =>
         set((s) => ({ dayTasks: s.dayTasks.map((t) => (t.id === id ? { ...t, ...patch, updatedAt: Date.now() } : t)) })),
@@ -386,6 +486,48 @@ export const useDb = create<DbState & DbActions>()(
           const rest = s.customNames.filter((n) => n.id !== id)
           const clean = name.trim()
           return { customNames: clean ? [...rest, { id, name: clean, updatedAt: Date.now() }] : rest }
+        }),
+
+      saveNote: (note) => {
+        const now = Date.now()
+        if (note.id) {
+          set((s) => ({ notes: s.notes.map((n) => (n.id === note.id ? { ...n, ...note, id: n.id, updatedAt: now } : n)) }))
+          return note.id
+        }
+        const id = uuid()
+        set((s) => ({ notes: [...s.notes, { ...note, id, createdAt: now, updatedAt: now }] }))
+        return id
+      },
+      deleteNote: (id) => set((s) => ({ notes: s.notes.filter((n) => n.id !== id) })),
+
+      saveRitual: (date, patch) =>
+        set((s) => {
+          const old = s.rituals.find((r) => r.id === date)
+          const next: RitualDay = { steps: [], ...old, ...patch, id: date, updatedAt: Date.now() }
+          return { rituals: old ? s.rituals.map((r) => (r.id === date ? next : r)) : [...s.rituals, next] }
+        }),
+
+      setDayOrder: (date, keys) =>
+        set((s) => ({ dayOrders: [...s.dayOrders.filter((o) => o.id !== date), { id: date, keys, updatedAt: Date.now() }] })),
+
+      setDayPrize: (date, text) =>
+        set((s) => {
+          const rest = s.dayPrizes.filter((p) => p.id !== date)
+          const clean = text.trim()
+          return { dayPrizes: clean ? [...rest, { id: date, text: clean, updatedAt: Date.now() }] : rest }
+        }),
+
+      addFocusSession: (session) => {
+        const id = uuid()
+        set((s) => ({ focusSessions: [...s.focusSessions, { ...session, id, createdAt: Date.now() }] }))
+        return id
+      },
+
+      setLifeWheelScore: (month, areaId, score) =>
+        set((s) => {
+          const old = s.lifeWheel.find((m) => m.id === month)
+          const next: LifeWheelMonth = { id: month, scores: { ...old?.scores, [areaId]: score }, updatedAt: Date.now() }
+          return { lifeWheel: old ? s.lifeWheel.map((m) => (m.id === month ? next : m)) : [...s.lifeWheel, next] }
         }),
 
       importAll: (json) => {

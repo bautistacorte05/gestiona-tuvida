@@ -6,6 +6,11 @@ import { Card, Empty, EntryRow } from '../../components/common';
 import DayPlan from '../../components/DayPlan';
 import EntryForm from '../../components/EntryForm';
 import { DayChart, GoalsHint, HabitGrid, HabitProgressList, MonthProgress } from '../../components/HabitPanel';
+import DailyQuestion from '../../components/hoy/DailyQuestion';
+import DayReview from '../../components/hoy/DayReview';
+import RitualPrompt from '../../components/hoy/RitualPrompt';
+import StreaksRow from '../../components/hoy/StreaksRow';
+import TodayHabits from '../../components/hoy/TodayHabits';
 import { DayStack } from '../../components/TimeCharts';
 import { COLOR_CLASSES, DAILY_CATEGORIES, findSub, type Category, type Subcategory } from '../../config/categories';
 import { formatDay, monthKey, shiftDay, today } from '../../lib/dates';
@@ -88,9 +93,15 @@ export default function HoyScreen() {
           </View>
         )}
 
+        {isToday && <StreaksRow habits={habits} done={done} />}
+        <RitualPrompt date={date} />
+        <TodayHabits habits={habits} done={done} date={date} />
+
         <HabitGrid habits={habits} done={done} date={date} onSelectDate={setDate} />
 
         <DayPlan date={date} />
+        <DailyQuestion date={date} />
+        <DayReview date={date} />
 
         <MonthProgress month={month} summary={summary} />
         <DayChart byDay={summary.byDay} selected={date} />

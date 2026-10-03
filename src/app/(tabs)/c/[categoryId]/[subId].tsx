@@ -5,11 +5,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import DailyGoalsView from '../../../../components/DailyGoalsView';
 import FinanceHomeView from '../../../../components/FinanceHomeView';
+import LifeWheelView from '../../../../components/LifeWheelView';
 import LongGoalsView from '../../../../components/LongGoalsView';
+import NotesView from '../../../../components/NotesView';
 import PetLostView from '../../../../components/PetLostView';
 import PetProfileView from '../../../../components/PetProfileView';
 import PetTrainingView from '../../../../components/PetTrainingView';
 import PetWalkLiveView from '../../../../components/PetWalkLiveView';
+import RitualView from '../../../../components/RitualView';
 import FootballSheet from '../../../../components/sheets/FootballSheet';
 import ProjectsSheet from '../../../../components/sheets/ProjectsSheet';
 import ReadingSheet from '../../../../components/sheets/ReadingSheet';
@@ -17,6 +20,7 @@ import TrainingSheet from '../../../../components/sheets/TrainingSheet';
 import WellbeingSheet from '../../../../components/sheets/WellbeingSheet';
 import WorkSheet from '../../../../components/sheets/WorkSheet';
 import SubView from '../../../../components/SubView';
+import WeekPlannerView from '../../../../components/WeekPlannerView';
 import type { Category, Subcategory } from '../../../../config/categories';
 import { useFindSub } from '../../../../lib/names';
 
@@ -52,6 +56,10 @@ function renderSub(found: { category: Category; sub: Subcategory } | undefined):
   if (found.sub.custom === 'reading-sheet') return <ReadingSheet />;
   if (found.sub.custom === 'wellbeing-sheet') return <WellbeingSheet />;
   if (found.sub.custom === 'projects-sheet') return <ProjectsSheet />;
+  if (found.sub.custom === 'ritual') return <RitualView />;
+  if (found.sub.custom === 'week-planner') return <WeekPlannerView />;
+  if (found.sub.custom === 'notes') return <NotesView />;
+  if (found.sub.custom === 'life-wheel') return <LifeWheelView />;
 
   if (found.sub.custom) {
     return (

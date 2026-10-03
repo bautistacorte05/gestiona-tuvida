@@ -54,6 +54,10 @@ export interface Subcategory {
     | 'reading-sheet'
     | 'wellbeing-sheet'
     | 'projects-sheet'
+    | 'ritual'
+    | 'week-planner'
+    | 'notes'
+    | 'life-wheel'
 }
 
 export interface Category {
@@ -77,6 +81,22 @@ export interface Category {
 const minutos: Field = { key: 'minutos', label: 'Duración', type: 'number', unit: 'min', aggregate: 'sum' }
 
 export const CATEGORIES: Category[] = [
+  {
+    id: 'ritual',
+    name: 'Ritual',
+    icon: '🌅',
+    color: 'amber',
+    landing: 'manana',
+    subcategories: [{ id: 'manana', name: 'Ritual de la mañana', icon: '🌅', fields: [], custom: 'ritual' }],
+  },
+  {
+    id: 'semana',
+    name: 'Mi semana',
+    icon: '🗓️',
+    color: 'sky',
+    landing: 'plan',
+    subcategories: [{ id: 'plan', name: 'Mi semana', icon: '🗓️', fields: [], custom: 'week-planner' }],
+  },
   {
     id: 'finanzas',
     name: 'Finanzas',
@@ -348,6 +368,7 @@ export const CATEGORIES: Category[] = [
     subcategories: [
       { id: 'diarias', name: 'Diarias', icon: '☑️', fields: [], custom: 'daily-goals' },
       { id: 'largoplazo', name: 'Largo plazo', icon: '🏁', fields: [], custom: 'long-goals' },
+      { id: 'rueda', name: 'Rueda de la vida', icon: '🎡', fields: [], custom: 'life-wheel' },
     ],
   },
   {
@@ -371,6 +392,14 @@ export const CATEGORIES: Category[] = [
         ],
       },
     ],
+  },
+  {
+    id: 'notas',
+    name: 'Anotaciones',
+    icon: '📝',
+    color: 'teal',
+    landing: 'todas',
+    subcategories: [{ id: 'todas', name: 'Anotaciones', icon: '📝', fields: [], custom: 'notes' }],
   },
 ]
 
