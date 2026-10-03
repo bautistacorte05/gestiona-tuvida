@@ -62,7 +62,7 @@ export default function HoyScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-ink-950" edges={['bottom']}>
-      <ScrollView className="flex-1 px-4" contentContainerClassName="gap-5 pb-10 pt-4">
+      <ScrollView className="flex-1 px-4" contentContainerClassName="gap-5 pb-10 pt-4" keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
         <View className="flex-row items-center justify-between gap-2">
           <Pressable onPress={() => setDate(shiftDay(date, -1))} className="h-11 w-11 items-center justify-center" accessibilityLabel="Día anterior">
             <Text className="text-xl text-ink-300">‹</Text>
