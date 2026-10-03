@@ -1,5 +1,5 @@
 import { QUESTIONS, type Question } from '../config/questions';
-import type { Entry, Note, RitualDay } from './db';
+import type { Entry, Note } from './db';
 import { isActiveOn, streaks, type Habit } from './habits';
 
 /**
@@ -17,11 +17,6 @@ export function habitDaysStreak(habits: Habit[], done: Map<string, Set<string>>,
     for (const d of done.get(h.key) ?? []) if (isActiveOn(h, d)) days.add(d);
   }
   return streaks(days, today).current;
-}
-
-/** Días seguidos con el ritual de la mañana terminado (`doneAt`). */
-export function ritualStreak(rituals: RitualDay[], today: string) {
-  return streaks(new Set(rituals.filter((r) => !!r.doneAt).map((r) => r.id)), today).current;
 }
 
 /** Número de día (días desde 1970) de una fecha YYYY-MM-DD, sin depender de la zona horaria. */

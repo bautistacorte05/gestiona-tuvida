@@ -5,7 +5,8 @@ import { today } from '../../lib/dates';
 import { useDb } from '../../lib/db';
 import type { Habit } from '../../lib/habits';
 import { computeStreak } from '../../lib/streak';
-import { habitDaysStreak, ritualStreak } from '../../lib/today';
+import { ritualStreak } from '../../lib/ritual';
+import { habitDaysStreak } from '../../lib/today';
 
 /**
  * Rachas arriba de Hoy (solo se muestran en el día de hoy): días seguidos con algún hábito
