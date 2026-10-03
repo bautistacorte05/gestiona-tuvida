@@ -16,6 +16,10 @@ const WEB_DIR = app.isPackaged ? path.join(process.resourcesPath, 'web') : path.
 const APP_URL = 'app://gestiona/'
 protocol.registerSchemesAsPrivileged([{ scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true } }])
 
+// Windows muestra las notificaciones (ej. el fin del temporizador de enfoque) a nombre de la app
+// instalada, y para eso necesita su id (el mismo appId del instalador).
+if (process.platform === 'win32') app.setAppUserModelId('com.squali.gestionmobile.desktop')
+
 let mainWindow
 
 function serveExport() {

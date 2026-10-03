@@ -8,20 +8,13 @@ import { toISO } from '../lib/dates';
 import { useDb } from '../lib/db';
 import { formatDuration, formatPace } from '../lib/geo';
 import { mapHtml } from '../lib/mapHtml';
+// Cómo se muestran los avisos con la app abierta (compartido con el temporizador de enfoque).
+import '../lib/notifications';
 import { useThemeColors, WASHI, type ThemeColors } from '../lib/theme';
 import { finishWalk, isWalkInterrupted, requestLocationPermission, resumeWalk, startWalk, supportsBackground, useLiveWalk } from '../lib/walkTracker';
 import BackButton from './BackButton';
 import PetSwitcher from './PetSwitcher';
 import ScreenTitle from './ScreenTitle';
-
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-  }),
-});
 
 export default function PetWalkLiveView() {
   // En la PC no tiene sentido: no vas a salir a pasear con la computadora.

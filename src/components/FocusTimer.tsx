@@ -7,6 +7,7 @@ import { confirm, notify } from '../lib/confirm';
 import { today } from '../lib/dates';
 import { setTaskDone } from '../lib/dayTasks';
 import { useDb } from '../lib/db';
+import { cancelFocusAlarm, scheduleFocusAlarm } from '../lib/notifications';
 import { useThemeColors } from '../lib/theme';
 import { formatMinutes } from '../lib/time';
 
@@ -54,7 +55,8 @@ const clock = (ms: number) => {
 /**
  * Temporizador de enfoque para una tarea (pantalla completa). La cuenta se hace contra la hora
  * de fin, así sigue bien aunque el celular se bloquee o la app quede en segundo plano.
- * Al terminar: vibra, guarda la tanda (`focusSessions`) y pregunta si tilda la tarea.
+ * Al terminar: vibra, guarda la tanda (`focusSessions`) y pregunta si tilda la tarea. Si la app no
+ * está a la vista, avisa con una notificación (lib/notifications.ts).
  */
 export default function FocusTimer({ date, taskKey, title, onClose }: { date: string; taskKey: string; title: string; onClose: () => void }) {
   const c = useThemeColors();
@@ -87,6 +89,7 @@ export default function FocusTimer({ date, taskKey, title, onClose }: { date: st
   const finish = async (runEnd: number) => {
     if (finishedFor.current === runEnd) return;
     finishedFor.current = runEnd;
+    void cancelFocusAlarm();
     setEndAt(null);
     setLeftMs(0);
     Vibration.vibrate();
@@ -120,14 +123,20 @@ export default function FocusTimer({ date, taskKey, title, onClose }: { date: st
     };
   }, [running]);
 
+  // Al cerrar el temporizador (cortado o tarea terminada) no tiene que quedar un aviso pendiente.
+  useEffect(() => () => void cancelFocusAlarm(), []);
+
   const startOrPause = () => {
     const n = Date.now();
     if (endAt !== null) {
       setLeftMs(Math.max(0, endAt - n));
       setEndAt(null);
+      void cancelFocusAlarm();
     } else {
       setNow(n);
       setEndAt(n + leftMs);
+      // Aviso para cuando termine, por si el celular está bloqueado o la app quedó atrás.
+      void scheduleFocusAlarm(n + leftMs, title);
     }
   };
 
@@ -254,7 +263,9 @@ export default function FocusTimer({ date, taskKey, title, onClose }: { date: st
               <Text className="text-center text-sm text-ink-500">
                 Hoy llevás {formatMinutes(todayMinutes)} de enfoque
               </Text>
-              <Text className="text-center text-xs text-ink-500">Cuando termine el tiempo, te avisa y te pregunta si la tarea quedó hecha.</Text>
+              <Text className="text-center text-xs text-ink-500">
+                Cuando termine el tiempo te avisa (aunque tengas el celular bloqueado) y te pregunta si la tarea quedó hecha.
+              </Text>
             </View>
           </View>
         </ScrollView>

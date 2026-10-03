@@ -34,24 +34,27 @@ function removeTask(task: PlanTask) {
   else archiveFixedTask(task.id);
 }
 
+/** Título de la tarea y, abajo y más chico, la hora y si se repite. Va dentro de una columna. */
 function TaskTitle({ task }: { task: PlanTask }) {
+  const detail = [task.time, task.kind === 'fixed' ? '🔁 se repite' : ''].filter(Boolean).join(' · ');
   return (
-    // Márgenes explícitos (no gap-x): en el celular el gap entre textos no se aplicaba y la hora quedaba pegada.
     <>
-      {!!task.time && <Text className={`mr-2 text-sm font-semibold ${task.done ? 'text-ink-500' : 'text-shu-400'}`}>{task.time}</Text>}
-      <Text className={`mr-2 text-base ${task.done ? 'text-ink-500 line-through' : 'text-ink-100'}`}>{task.title}</Text>
-      {task.kind === 'fixed' && <Text className="text-xs text-ink-400">🔁</Text>}
+      <Text className={`text-[15px] ${task.done ? 'text-ink-500 line-through' : 'text-ink-100'}`}>{task.title}</Text>
+      {!!detail && <Text className="mt-0.5 text-xs text-ink-500">{detail}</Text>}
     </>
   );
 }
 
-function Row({ task, date, onFocus }: { task: PlanTask; date: string; onFocus: () => void }) {
+/** Separador entre filas (la última no lleva). */
+const rowLine = (last: boolean) => (last ? '' : 'border-b border-ink-800');
+
+function Row({ task, date, last, onFocus }: { task: PlanTask; date: string; last: boolean; onFocus: () => void }) {
   const toggle = () => toggleTask(date, task);
   return (
-    <View className="flex-row items-center gap-2 py-1">
+    <View className={`min-h-[52px] flex-row items-center gap-2 py-1 ${rowLine(last)}`}>
       {/* El mismo cuadradito que la grilla de hábitos. */}
       <CheckSquare state={task.done ? 'done' : 'missed'} size={26} label={`${task.title}: ${task.done ? 'hecho' : 'sin hacer'}`} onPress={toggle} />
-      <Pressable onPress={toggle} className="ml-1 flex-1 flex-row flex-wrap items-center">
+      <Pressable onPress={toggle} className="ml-1 min-w-0 flex-1 justify-center py-1">
         <TaskTitle task={task} />
       </Pressable>
       <Pressable
@@ -87,9 +90,9 @@ function MoveButton({ dir, title, disabled, onPress }: { dir: 'up' | 'down'; tit
 /** Fila en modo "Ordenar": número de lugar y flechas para subirla o bajarla. */
 function OrderRow({ task, index, count, onMove }: { task: PlanTask; index: number; count: number; onMove: (delta: -1 | 1) => void }) {
   return (
-    <View className="min-h-[52px] flex-row items-center gap-2 py-1">
+    <View className={`min-h-[52px] flex-row items-center gap-2 py-1 ${rowLine(index === count - 1)}`}>
       <Text className="w-6 text-center text-sm font-bold text-ink-500">{index + 1}</Text>
-      <View className="flex-1 flex-row flex-wrap items-center">
+      <View className="min-w-0 flex-1 justify-center">
         <TaskTitle task={task} />
       </View>
       <MoveButton dir="up" title={task.title} disabled={index === 0} onPress={() => onMove(-1)} />
@@ -203,9 +206,10 @@ function PendingFromBefore() {
 }
 
 /**
- * Hoy → "Plan del día": tareas sueltas del día y tareas fijas de ese día de la semana (las metas
- * diarias van en la grilla). Se pueden ordenar a mano ("Ordenar") y abrir un temporizador de
- * enfoque (⏱️) para cada una. El orden y las tareas salen de `lib/dayTasks.ts` (igual que Mi semana).
+ * Hoy → "Tareas de hoy": tareas sueltas del día y tareas fijas de ese día de la semana (las metas
+ * diarias van en la grilla), con cuántas van hechas y una barra de progreso. Se pueden ordenar a
+ * mano ("Ordenar") y abrir un temporizador de enfoque (⏱️) para cada una. El orden y las tareas
+ * salen de `lib/dayTasks.ts` (igual que Mi semana).
  */
 export default function DayPlan({ date }: { date: string }) {
   const dayTasks = useDb((s) => s.dayTasks);
@@ -221,6 +225,8 @@ export default function DayPlan({ date }: { date: string }) {
   const ordering = orderingDate === date;
   const doneCount = items.filter((i) => i.done).length;
   const isToday = date === today();
+  const title = isToday ? 'Tareas de hoy' : `Tareas del ${formatDay(date, { weekday: 'long', day: 'numeric' }).toLowerCase()}`;
+  const pct = items.length ? Math.round((doneCount / items.length) * 100) : 0;
 
   // Cada movida guarda el orden completo de ese día.
   const move = (index: number, delta: -1 | 1) =>
@@ -236,24 +242,33 @@ export default function DayPlan({ date }: { date: string }) {
   return (
     <View className="gap-3 rounded-2xl border border-ink-800 bg-ink-900 p-4">
       <View className="flex-row items-center justify-between gap-2">
-        <Text className="shrink text-base font-bold text-ink-100">📝 Plan del día</Text>
-        <View className="flex-row items-center gap-3">
+        <View className="min-w-0 shrink">
+          <Text className="text-[17px] font-bold text-ink-100">{title}</Text>
           {items.length > 0 && (
-            <Text className="text-sm text-ink-400">
-              {doneCount}/{items.length}
+            <Text className="mt-0.5 text-[13px] text-ink-400">
+              {doneCount} de {items.length} {doneCount === 1 ? 'hecha' : 'hechas'}
             </Text>
           )}
-          {(ordering || items.length > 1) && (
-            <Pressable
-              onPress={() => setOrderingDate(ordering ? null : date)}
-              accessibilityRole="button"
-              accessibilityLabel={ordering ? 'Terminar de ordenar' : 'Ordenar las tareas'}
-              className={`h-11 items-center justify-center rounded-xl border px-3.5 ${ordering ? 'border-shu-500 bg-shu-500' : 'border-ink-700 active:bg-ink-800'}`}>
-              <Text className={`text-sm font-semibold ${ordering ? 'text-washi' : 'text-ink-300'}`}>{ordering ? 'Listo' : 'Ordenar'}</Text>
-            </Pressable>
-          )}
         </View>
+        {(ordering || items.length > 1) && (
+          <Pressable
+            onPress={() => setOrderingDate(ordering ? null : date)}
+            accessibilityRole="button"
+            accessibilityLabel={ordering ? 'Terminar de ordenar' : 'Ordenar las tareas'}
+            className={`h-11 items-center justify-center rounded-xl border px-3.5 ${ordering ? 'border-shu-500 bg-shu-500' : 'border-ink-700 active:bg-ink-800'}`}>
+            <Text className={`text-sm font-semibold ${ordering ? 'text-washi' : 'text-ink-300'}`}>{ordering ? 'Listo' : 'Ordenar'}</Text>
+          </Pressable>
+        )}
       </View>
+
+      {items.length > 0 && (
+        <View
+          className="h-1.5 overflow-hidden rounded-full bg-ink-800"
+          accessibilityRole="progressbar"
+          accessibilityValue={{ min: 0, max: 100, now: pct }}>
+          <View className="h-full rounded-full bg-shu-500" style={{ width: `${pct}%` }} />
+        </View>
+      )}
 
       {isToday && <PendingFromBefore />}
 
@@ -263,7 +278,7 @@ export default function DayPlan({ date }: { date: string }) {
             ordering ? (
               <OrderRow key={task.key} task={task} index={i} count={items.length} onMove={(delta) => move(i, delta)} />
             ) : (
-              <Row key={task.key} task={task} date={date} onFocus={() => setFocus({ date, key: task.key, title: task.title })} />
+              <Row key={task.key} task={task} date={date} last={i === items.length - 1} onFocus={() => setFocus({ date, key: task.key, title: task.title })} />
             ),
           )}
         </View>

@@ -15,7 +15,7 @@ import { DayStack } from '../../components/TimeCharts';
 import { COLOR_CLASSES, DAILY_CATEGORIES, findSub, type Category, type Subcategory } from '../../config/categories';
 import { formatDay, monthKey, shiftDay, today } from '../../lib/dates';
 import { useDb, type Entry } from '../../lib/db';
-import { buildHabits, dayProgress, doneDatesByKey, habitRows, isActiveInMonth, monthSummary } from '../../lib/habits';
+import { buildHabits, doneDatesByKey, habitRows, isActiveInMonth, monthSummary } from '../../lib/habits';
 import { useCategoryName } from '../../lib/names';
 import { greeting } from '../../lib/streak';
 import { formatMinutes, minutesByDay } from '../../lib/time';
@@ -47,7 +47,6 @@ export default function HoyScreen() {
   const monthHabits = useMemo(() => habits.filter((h) => isActiveInMonth(h, month)), [habits, month]);
   const summary = useMemo(() => monthSummary(monthHabits, done, month, t), [monthHabits, done, month, t]);
   const rows = useMemo(() => habitRows(monthHabits, done, month, t), [monthHabits, done, month, t]);
-  const progress = dayProgress(habits, done, date);
   const hasGoals = goals.some((g) => !g.archived);
 
   const entries = useMemo(
@@ -83,13 +82,9 @@ export default function HoyScreen() {
         </View>
 
         {isToday && (
-          <View className="flex-row items-center justify-between gap-3">
-            <Text className="shrink text-2xl font-bold text-ink-100">{greeting()}{nombre ? `, ${nombre}` : ''} 👋</Text>
-            {progress.active > 0 && (
-              <Text className="text-sm font-medium text-ink-400">
-                {progress.done}/{progress.active} · {Math.round((progress.done / progress.active) * 100)}%
-              </Text>
-            )}
+          <View>
+            <Text className="text-2xl font-bold text-ink-100">{greeting()}{nombre ? `, ${nombre}` : ''} 👋</Text>
+            <Text className="mt-0.5 text-sm text-ink-400">Tu día de un vistazo.</Text>
           </View>
         )}
 
