@@ -9,6 +9,7 @@ import { weekDates } from '../lib/habits';
 import { useIsDesktop } from '../lib/layout';
 import { useThemeColors } from '../lib/theme';
 import BackButton from './BackButton';
+import EditTaskSheet from './EditTaskSheet';
 import ScreenTitle from './ScreenTitle';
 
 const CARD = 'rounded-2xl border border-ink-800 bg-ink-900';
@@ -33,23 +34,28 @@ function NavButton({ label, text, onPress }: { label: string; text: string; onPr
   );
 }
 
-function TaskLine({ task, date }: { task: PlanTask; date: string }) {
+function TaskLine({ task, date, onEdit }: { task: PlanTask; date: string; onEdit: () => void }) {
   return (
-    <Pressable
-      onPress={() => setTaskDone(useDb.getState(), date, task.key, !task.done)}
-      accessibilityRole="checkbox"
-      accessibilityState={{ checked: task.done }}
-      accessibilityLabel={task.title}
-      className="min-h-11 flex-row items-center gap-2.5 rounded-lg active:bg-ink-800">
-      <View className={`h-5 w-5 items-center justify-center rounded-md ${task.done ? 'bg-shu-500' : 'border-2 border-ink-600'}`}>
-        {task.done && <Text className="text-[11px] font-bold text-washi">✓</Text>}
-      </View>
-      <Text className={`flex-1 text-sm ${task.done ? 'text-ink-500 line-through' : 'text-ink-100'}`}>
-        {!!task.time && <Text className={task.done ? 'text-ink-500' : 'font-semibold text-shu-400'}>{task.time} </Text>}
-        {task.title}
-        {task.kind === 'fixed' && <Text className="text-xs text-ink-400"> 🔁</Text>}
-      </Text>
-    </Pressable>
+    <View className="flex-row items-center gap-1">
+      <Pressable
+        onPress={() => setTaskDone(useDb.getState(), date, task.key, !task.done)}
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: task.done }}
+        accessibilityLabel={task.title}
+        className="min-h-11 flex-1 flex-row items-center gap-2.5 rounded-lg active:bg-ink-800">
+        <View className={`h-5 w-5 items-center justify-center rounded-md ${task.done ? 'bg-shu-500' : 'border-2 border-ink-600'}`}>
+          {task.done && <Text className="text-[11px] font-bold text-washi">✓</Text>}
+        </View>
+        <Text className={`flex-1 text-sm ${task.done ? 'text-ink-500 line-through' : 'text-ink-100'}`}>
+          {!!task.time && <Text className={task.done ? 'text-ink-500' : 'font-semibold text-shu-400'}>{task.time} </Text>}
+          {task.title}
+          {task.kind === 'fixed' && <Text className="text-xs text-ink-400"> 🔁</Text>}
+        </Text>
+      </Pressable>
+      <Pressable onPress={onEdit} hitSlop={4} accessibilityRole="button" accessibilityLabel={`Editar "${task.title}"`} className="h-9 w-9 items-center justify-center rounded-lg active:bg-ink-800">
+        <Text className="text-sm opacity-60">✏️</Text>
+      </Pressable>
+    </View>
   );
 }
 
@@ -131,6 +137,7 @@ function DayCard({
   onAdd,
   onCloseAdd,
   onPrize,
+  onEditTask,
   width,
 }: {
   day: Day;
@@ -139,6 +146,7 @@ function DayCard({
   onAdd: () => void;
   onCloseAdd: () => void;
   onPrize: () => void;
+  onEditTask: (task: PlanTask) => void;
   width?: number;
 }) {
   const isToday = day.date === now;
@@ -163,7 +171,7 @@ function DayCard({
       {day.tasks.length > 0 && (
         <View>
           {day.tasks.map((task) => (
-            <TaskLine key={task.key} task={task} date={day.date} />
+            <TaskLine key={task.key} task={task} date={day.date} onEdit={() => onEditTask(task)} />
           ))}
         </View>
       )}
@@ -241,6 +249,7 @@ export default function WeekPlannerView() {
   const [anchor, setAnchor] = useState(today);
   const [adding, setAdding] = useState<string | null>(null);
   const [prizeFor, setPrizeFor] = useState<string | null>(null);
+  const [editingTask, setEditingTask] = useState<PlanTask | null>(null);
   const [gridW, setGridW] = useState(0);
 
   const dayTasks = useDb((s) => s.dayTasks);
@@ -330,12 +339,14 @@ export default function WeekPlannerView() {
               onAdd={() => setAdding(day.date)}
               onCloseAdd={() => setAdding(null)}
               onPrize={() => setPrizeFor(day.date)}
+              onEditTask={setEditingTask}
             />
           ))}
         </View>
       </ScrollView>
 
       {!!prizeFor && <PrizeSheet date={prizeFor} current={days.find((d) => d.date === prizeFor)?.prize} onClose={() => setPrizeFor(null)} />}
+      {!!editingTask && <EditTaskSheet task={editingTask} onClose={() => setEditingTask(null)} />}
     </SafeAreaView>
   );
 }

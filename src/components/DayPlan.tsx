@@ -6,6 +6,7 @@ import { moveKey, orderedTasksOfDate, setTaskDone, type PlanTask } from '../lib/
 import { useDb } from '../lib/db';
 import { goToSub } from '../lib/nav';
 import { useThemeColors } from '../lib/theme';
+import EditTaskSheet from './EditTaskSheet';
 import FocusTimer from './FocusTimer';
 import { CheckSquare } from './HabitPanel';
 import TimeField from './TimeField';
@@ -48,7 +49,7 @@ function TaskTitle({ task }: { task: PlanTask }) {
 /** Separador entre filas (la última no lleva). */
 const rowLine = (last: boolean) => (last ? '' : 'border-b border-ink-800');
 
-function Row({ task, date, last, onFocus }: { task: PlanTask; date: string; last: boolean; onFocus: () => void }) {
+function Row({ task, date, last, onFocus, onEdit }: { task: PlanTask; date: string; last: boolean; onFocus: () => void; onEdit: () => void }) {
   const toggle = () => toggleTask(date, task);
   return (
     <View className={`min-h-[52px] flex-row items-center gap-2 py-1 ${rowLine(last)}`}>
@@ -56,6 +57,9 @@ function Row({ task, date, last, onFocus }: { task: PlanTask; date: string; last
       <CheckSquare state={task.done ? 'done' : 'missed'} size={26} label={`${task.title}: ${task.done ? 'hecho' : 'sin hacer'}`} onPress={toggle} />
       <Pressable onPress={toggle} className="ml-1 min-w-0 flex-1 justify-center py-1">
         <TaskTitle task={task} />
+      </Pressable>
+      <Pressable onPress={onEdit} hitSlop={4} accessibilityRole="button" accessibilityLabel={`Editar "${task.title}"`} className="h-11 w-11 items-center justify-center rounded-lg active:bg-ink-800">
+        <Text className="text-base opacity-60">✏️</Text>
       </Pressable>
       <Pressable
         onPress={onFocus}
@@ -219,6 +223,7 @@ export default function DayPlan({ date }: { date: string }) {
   // Se ordena el día en que se tocó "Ordenar": al cambiar de día en Hoy, sale solo del modo.
   const [orderingDate, setOrderingDate] = useState<string | null>(null);
   const [focus, setFocus] = useState<{ date: string; key: string; title: string } | null>(null);
+  const [editingTask, setEditingTask] = useState<PlanTask | null>(null);
 
   const items = useMemo(() => orderedTasksOfDate(date, { dayTasks, fixedTasks, checks, dayOrders }), [date, dayTasks, fixedTasks, checks, dayOrders]);
 
@@ -278,7 +283,14 @@ export default function DayPlan({ date }: { date: string }) {
             ordering ? (
               <OrderRow key={task.key} task={task} index={i} count={items.length} onMove={(delta) => move(i, delta)} />
             ) : (
-              <Row key={task.key} task={task} date={date} last={i === items.length - 1} onFocus={() => setFocus({ date, key: task.key, title: task.title })} />
+              <Row
+                key={task.key}
+                task={task}
+                date={date}
+                last={i === items.length - 1}
+                onFocus={() => setFocus({ date, key: task.key, title: task.title })}
+                onEdit={() => setEditingTask(task)}
+              />
             ),
           )}
         </View>
@@ -293,6 +305,7 @@ export default function DayPlan({ date }: { date: string }) {
       </Pressable>
 
       {!!focus && <FocusTimer date={focus.date} taskKey={focus.key} title={focus.title} onClose={() => setFocus(null)} />}
+      {!!editingTask && <EditTaskSheet task={editingTask} onClose={() => setEditingTask(null)} />}
     </View>
   );
 }

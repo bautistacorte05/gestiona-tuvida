@@ -326,6 +326,7 @@ interface DbActions {
   updateDayTask: (id: string, patch: Partial<Pick<DayTask, 'date' | 'done' | 'dismissed' | 'title' | 'time'>>) => void
   deleteDayTask: (id: string) => void
   addFixedTask: (title: string, weekdays: number[], time?: string) => void
+  updateFixedTask: (id: string, patch: Partial<Pick<FixedTask, 'title' | 'time'>>) => void
   archiveFixedTask: (id: string) => void
   /** Nombre vacío = volver al nombre original. */
   setCustomName: (id: string, name: string) => void
@@ -478,6 +479,8 @@ export const useDb = create<DbState & DbActions>()(
         const now = Date.now()
         set((s) => ({ fixedTasks: [...s.fixedTasks, { id: uuid(), title: title.trim(), weekdays, time: time || undefined, createdAt: now, updatedAt: now }] }))
       },
+      updateFixedTask: (id, patch) =>
+        set((s) => ({ fixedTasks: s.fixedTasks.map((t) => (t.id === id ? { ...t, ...patch, updatedAt: Date.now() } : t)) })),
       archiveFixedTask: (id) =>
         set((s) => ({ fixedTasks: s.fixedTasks.map((t) => (t.id === id ? { ...t, archivedAt: Date.now(), updatedAt: Date.now() } : t)) })),
 
