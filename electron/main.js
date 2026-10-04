@@ -24,7 +24,7 @@ let mainWindow
 
 function serveExport() {
   protocol.handle('app', (request) => {
-    const file = resolveFile(WEB_DIR, new URL(request.url).pathname) ?? path.join(WEB_DIR, '+not-found.html')
+    const file = resolveFile(WEB_DIR, new URL(request.url).pathname) ?? path.join(WEB_DIR, 'index.html')
     return net.fetch(pathToFileURL(file).toString())
   })
 }
