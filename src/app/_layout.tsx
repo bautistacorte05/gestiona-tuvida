@@ -65,13 +65,17 @@ export default function RootLayout() {
   }, [scheme, c]);
 
   return (
-    <GestureHandlerRootView style={[{ flex: 1 }, themeVars(scheme, accent)]}>
-      <ThemeProvider value={navTheme}>
-        <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
-        <AuthProvider>
-          <RootStack />
-        </AuthProvider>
-      </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      {/* Las variables van en un View (no en GestureHandlerRootView): en el celular NativeWind solo
+          las lee en sus componentes; ahí se perdían y el texto quedaba negro sobre negro. */}
+      <View style={[{ flex: 1 }, themeVars(scheme, accent)]}>
+        <ThemeProvider value={navTheme}>
+          <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+          <AuthProvider>
+            <RootStack />
+          </AuthProvider>
+        </ThemeProvider>
+      </View>
     </GestureHandlerRootView>
   );
 }

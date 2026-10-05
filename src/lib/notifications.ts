@@ -1,9 +1,15 @@
-import * as Notifications from 'expo-notifications';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { Platform } from 'react-native';
+
+// expo-notifications no funciona dentro de Expo Go en Android (removido en SDK 53): solo se carga
+// fuera de Expo Go, para poder abrir la app ahí y probar otras cosas (ej. los colores).
+const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- carga condicional: un import arriba rompería Expo Go
+export const Notifications = isExpoGo ? null : (require('expo-notifications') as typeof import('expo-notifications'));
 
 // Con la app abierta, los avisos del paseo se muestran como cartel arriba. El del temporizador
 // no: si la app está a la vista, la propia pantalla del temporizador ya vibra y pregunta.
-Notifications.setNotificationHandler({
+Notifications?.setNotificationHandler({
   handleNotification: async (n) => {
     const focus = n.request.content.data?.kind === 'focus';
     return { shouldShowBanner: !focus, shouldShowList: !focus, shouldPlaySound: false, shouldSetBadge: false };
@@ -34,6 +40,7 @@ export async function scheduleFocusAlarm(endAt: number, taskTitle: string) {
     return;
   }
 
+  if (!Notifications) return;
   try {
     const current = await Notifications.getPermissionsAsync();
     const granted = current.granted || (current.canAskAgain && (await Notifications.requestPermissionsAsync()).granted);
@@ -54,7 +61,7 @@ export async function cancelFocusAlarm() {
     clearTimeout(webTimer);
     webTimer = undefined;
   }
-  if (Platform.OS === 'web') return;
+  if (Platform.OS === 'web' || !Notifications) return;
   try {
     await Notifications.cancelScheduledNotificationAsync(FOCUS_ID);
   } catch {

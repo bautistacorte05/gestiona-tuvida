@@ -11,6 +11,7 @@ import { useThemeColors } from '../lib/theme';
 import BackButton from './BackButton';
 import EditTaskSheet from './EditTaskSheet';
 import ScreenTitle from './ScreenTitle';
+import TrashButton from './TrashButton';
 
 const CARD = 'rounded-2xl border border-ink-800 bg-ink-900';
 const INPUT = 'h-11 rounded-xl border border-ink-700 bg-ink-950 px-3 text-base text-ink-100';
@@ -34,6 +35,13 @@ function NavButton({ label, text, onPress }: { label: string; text: string; onPr
   );
 }
 
+/** Igual que en Hoy: la suelta se borra; la fija deja de repetirse desde hoy. */
+function removeTask(task: PlanTask) {
+  const { deleteDayTask, archiveFixedTask } = useDb.getState();
+  if (task.kind === 'day') deleteDayTask(task.id);
+  else archiveFixedTask(task.id);
+}
+
 function TaskLine({ task, date, onEdit }: { task: PlanTask; date: string; onEdit: () => void }) {
   return (
     <View className="flex-row items-center gap-1">
@@ -55,6 +63,11 @@ function TaskLine({ task, date, onEdit }: { task: PlanTask; date: string; onEdit
       <Pressable onPress={onEdit} hitSlop={4} accessibilityRole="button" accessibilityLabel={`Editar "${task.title}"`} className="h-9 w-9 items-center justify-center rounded-lg active:bg-ink-800">
         <Text className="text-sm opacity-60">✏️</Text>
       </Pressable>
+      {task.kind === 'fixed' ? (
+        <TrashButton what={`la tarea fija "${task.title}"`} detail="Deja de aparecer desde hoy. Los días anteriores quedan como estaban." onDelete={() => removeTask(task)} />
+      ) : (
+        <TrashButton what={`la tarea "${task.title}"`} onDelete={() => removeTask(task)} />
+      )}
     </View>
   );
 }

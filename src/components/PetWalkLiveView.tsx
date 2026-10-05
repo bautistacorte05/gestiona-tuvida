@@ -1,4 +1,3 @@
-import * as Notifications from 'expo-notifications';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -9,7 +8,7 @@ import { useDb } from '../lib/db';
 import { formatDuration, formatPace } from '../lib/geo';
 import { mapHtml } from '../lib/mapHtml';
 // Cómo se muestran los avisos con la app abierta (compartido con el temporizador de enfoque).
-import '../lib/notifications';
+import { Notifications } from '../lib/notifications';
 import { useThemeColors, WASHI, type ThemeColors } from '../lib/theme';
 import { finishWalk, isWalkInterrupted, requestLocationPermission, resumeWalk, startWalk, supportsBackground, useLiveWalk } from '../lib/walkTracker';
 import BackButton from './BackButton';
@@ -100,14 +99,14 @@ function PetWalkLiveViewNative() {
     }
     setPermissionDenied(false);
     // Android 13+ necesita este permiso para mostrar la notificación fija del paseo.
-    await Notifications.requestPermissionsAsync();
+    await Notifications?.requestPermissionsAsync();
     setBusy(true);
     try {
       await startWalk(activePetId);
       setInterrupted(false);
       setNow(Date.now());
       if (!supportsBackground) {
-        await Notifications.scheduleNotificationAsync({
+        await Notifications?.scheduleNotificationAsync({
           content: { title: '🐾 Paseo en curso', body: 'Rastreando el recorrido. Volvé a la app para ver el mapa.' },
           trigger: null,
         });
@@ -144,8 +143,8 @@ function PetWalkLiveViewNative() {
       if (!checks.some((c) => c.date === date && c.categoryId === 'mascota')) toggleCheck(date, 'mascota');
     }
 
-    await Notifications.dismissAllNotificationsAsync();
-    await Notifications.scheduleNotificationAsync({
+    await Notifications?.dismissAllNotificationsAsync();
+    await Notifications?.scheduleNotificationAsync({
       content: { title: '✓ Paseo terminado', body: `${done.distanceKm.toFixed(2)} km en ${formatDuration(duration)}.` },
       trigger: null,
     });
