@@ -1,6 +1,9 @@
 import { vars } from 'nativewind';
 import { Platform, useColorScheme } from 'react-native';
 
+import { create } from 'zustand';
+
+import { today } from './dates';
 import { useDb } from './db';
 import { useUiPrefs } from './uiPrefs';
 
@@ -108,14 +111,78 @@ export function useScheme(): Scheme {
   return appearance;
 }
 
-/** Color de la app elegido en Ajustes (viaja con la cuenta). Sin sesión o sin elegir: rojo. */
-export function useAccent(): AccentId {
+/** Combinación "Uno por semana" de Ajustes → Apariencia. */
+export const VARIED_WEEK_COLORS: AccentId[] = ['rosa', 'violeta', 'azul', 'turquesa', 'ambar'];
+/** Semanas que se pueden pintar (un mes ocupa 5 filas; la 6.ª, que aparece pocas veces, usa el color de la 5.ª). */
+export const WEEK_COLOR_SLOTS = 5;
+
+/** Fila del calendario del mes (0 = la primera; semanas de lunes a domingo) de una fecha "YYYY-MM-DD". La 6.ª cuenta como la 5.ª. */
+export function weekOfMonth(date: string) {
+  const firstWeekday = (new Date(Number(date.slice(0, 4)), Number(date.slice(5, 7)) - 1, 1).getDay() + 6) % 7;
+  return Math.min(Math.floor((firstWeekday + Number(date.slice(8)) - 1) / 7), WEEK_COLOR_SLOTS - 1);
+}
+
+/** Día que se está mirando en Hoy: con colores por semana, la app toma el color de esa semana. Fuera de Hoy: null = hoy. */
+export const useViewedDate = create<{ date: string | null; setDate: (date: string | null) => void }>((set) => ({
+  date: null,
+  setDate: (date) => set({ date }),
+}));
+
+type ProfileColors = { accent?: AccentId; weekColors?: AccentId[]; weekColorsOff?: boolean };
+
+/** "Uno por semana" activo: hay colores elegidos y no se pasó a "Todo el mes igual". */
+export const weekColorsOn = (p: ProfileColors | undefined) => !!p?.weekColors && !p.weekColorsOff;
+
+/** Color de cada semana: el elegido o, sin elegir, el de "Color de la app". */
+const weekIdsOf = (p: ProfileColors | undefined): AccentId[] =>
+  Array.from({ length: WEEK_COLOR_SLOTS }, (_, i) => accentOf(p?.weekColors?.[i] ?? p?.accent).id);
+
+/** Color de la app en una fecha: con colores por semana, el de esa semana; si no, el de "Color de la app". */
+const accentOn = (p: ProfileColors | undefined, date: string): Accent =>
+  accentOf(weekColorsOn(p) ? weekIdsOf(p)[weekOfMonth(date)] : p?.accent);
+
+/** Color elegido en "Color de la app" (viaja con la cuenta). Sin sesión o sin elegir: rojo. */
+export function useBaseAccent(): AccentId {
   const saved = useDb((s) => s.userProfile[0]?.accent);
   return accentOf(saved).id;
 }
 
-/** El 500 del color de la app, para lo que vive fuera de las pantallas (ej. la notificación del paseo). */
-export const currentAccentColor = () => accentOf(useDb.getState().userProfile[0]?.accent)[500];
+/** Color con el que se pinta la app: con colores por semana, el de la semana que se mira en Hoy (o la de hoy). */
+export function useAccent(): AccentId {
+  const accent = useDb((s) => s.userProfile[0]?.accent);
+  const weekColors = useDb((s) => s.userProfile[0]?.weekColors);
+  const weekColorsOff = useDb((s) => s.userProfile[0]?.weekColorsOff);
+  const viewed = useViewedDate((s) => s.date);
+  return accentOn({ accent, weekColors, weekColorsOff }, viewed ?? today()).id;
+}
+
+/** Colores guardados para cada semana (lo que muestra Ajustes, aunque esté en "Todo el mes igual"). */
+export function useSavedWeekColorIds(): AccentId[] {
+  const accent = useDb((s) => s.userProfile[0]?.accent);
+  const weekColors = useDb((s) => s.userProfile[0]?.weekColors);
+  return weekIdsOf({ accent, weekColors });
+}
+
+/** Colores con los que se pinta cada semana en la grilla: los guardados con "Uno por semana"; si no, todas con el color de la app. */
+export function useWeekColorIds(): AccentId[] {
+  const saved = useSavedWeekColorIds();
+  const accent = useDb((s) => s.userProfile[0]?.accent);
+  const on = useDb((s) => weekColorsOn(s.userProfile[0]));
+  return on ? saved : saved.map(() => accentOf(accent).id);
+}
+
+/** Colores de la semana `index` del mes (0 = la primera) en la grilla de hábitos: `fill` para los tildados, `text` para el título. */
+export function useWeekColor(): (index: number) => { fill: string; text: string } {
+  const ids = useWeekColorIds();
+  const scheme = useScheme();
+  return (index) => {
+    const a = accentOf(ids[Math.min(index, WEEK_COLOR_SLOTS - 1)]);
+    return { fill: a[500], text: a[scheme][0] };
+  };
+}
+
+/** El 500 del color de la app hoy, para lo que vive fuera de las pantallas (ej. la notificación del paseo). */
+export const currentAccentColor = () => accentOn(useDb.getState().userProfile[0], today())[500];
 
 /** Estilo para el contenedor raíz: define las variables de color de toda la app. */
 export function themeVars(scheme: Scheme, accentId: AccentId) {

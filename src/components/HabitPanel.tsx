@@ -18,6 +18,7 @@ import {
 } from '../lib/habits';
 import { useIsDesktop } from '../lib/layout';
 import { goToSub } from '../lib/nav';
+import { useWeekColor, weekOfMonth } from '../lib/theme';
 import { formatMinutes } from '../lib/time';
 import { Stepper } from './common';
 
@@ -68,27 +69,32 @@ export async function toggleHabit(h: Habit, date: string) {
   toggleCheck(date, h.key);
 }
 
+/** Con `color` (el de la semana en la grilla), el tildado y el borde de hoy van de ese color en vez del de la app. */
+const colorStyle = (state: CellState, color?: string) =>
+  !color ? undefined : state === 'done' ? { backgroundColor: color } : state === 'today' ? { borderColor: color } : undefined;
+
 /** Cuadradito con tilde: el de la grilla y el de las tareas del Plan del día. */
-export function CheckSquare({ state, size, label, onPress }: { state: CellState; size: number; label: string; onPress?: () => void }) {
+export function CheckSquare({ state, size, label, color, onPress }: { state: CellState; size: number; label: string; color?: string; onPress?: () => void }) {
   return (
     <Pressable
       disabled={!onPress || state === 'future' || state === 'inactive'}
       onPress={onPress}
       accessibilityLabel={label}
       className={`items-center justify-center rounded-lg ${CELL_CLASS[state]}`}
-      style={{ width: size, height: size }}>
+      style={[{ width: size, height: size }, colorStyle(state, color)]}>
       {state === 'done' && <Text className="text-xs font-bold text-washi">✓</Text>}
       {state === 'inactive' && <Text className="text-xs text-ink-700">·</Text>}
     </Pressable>
   );
 }
 
-function Cell({ h, date, size, done, now }: { h: Habit; date: string; size: number; done: Map<string, Set<string>>; now: string }) {
+function Cell({ h, date, size, done, now, color }: { h: Habit; date: string; size: number; done: Map<string, Set<string>>; now: string; color: string }) {
   const state = cellState(h, date, !!done.get(h.key)?.has(date), now);
   return (
     <CheckSquare
       state={state}
       size={size}
+      color={color}
       label={`${h.title}, ${formatDay(date, { weekday: 'long', day: 'numeric' })}: ${CELL_LABEL[state]}`}
       onPress={() => void toggleHabit(h, date)}
     />
@@ -151,8 +157,9 @@ export function HabitGrid({ habits, done, date, onSelectDate }: { habits: Habit[
   );
 }
 
-/** Celular: una semana de lunes a domingo. */
+/** Celular: una semana de lunes a domingo, con el color de la semana del mes del día elegido. */
 function WeekGrid({ habits, done, selected, now, onSelect, days }: GridProps & { days: string[] }) {
+  const color = useWeekColor()(weekOfMonth(selected)).fill;
   return (
     <View className="gap-1.5">
       <View className="flex-row items-end">
@@ -170,7 +177,7 @@ function WeekGrid({ habits, done, selected, now, onSelect, days }: GridProps & {
           </Text>
           {days.map((d) => (
             <View key={d} className="flex-1 items-center">
-              <Cell h={h} date={d} size={PHONE_CELL} done={done} now={now} />
+              <Cell h={h} date={d} size={PHONE_CELL} done={done} now={now} color={color} />
             </View>
           ))}
         </View>
@@ -181,6 +188,7 @@ function WeekGrid({ habits, done, selected, now, onSelect, days }: GridProps & {
 
 /** PC: el mes entero agrupado por semana, con los nombres fijos a la izquierda. */
 function MonthGrid({ habits, done, selected, now, onSelect, weeks }: GridProps & { weeks: (string | null)[][] }) {
+  const weekColor = useWeekColor();
   return (
     <View className="flex-row">
       <View style={{ width: DESK_NAME_W }}>
@@ -196,10 +204,11 @@ function MonthGrid({ habits, done, selected, now, onSelect, weeks }: GridProps &
       <ScrollView horizontal className="flex-1" contentContainerStyle={{ gap: 12, paddingBottom: 6 }}>
         {weeks.map((slots, w) => {
           const days = slots.filter((d): d is string => !!d);
+          const color = weekColor(w);
           return (
             <View key={w}>
               <View style={{ height: DESK_HEAD_H }} className="justify-end">
-                <Text numberOfLines={1} className="mb-1 text-[11px] font-semibold text-ink-400">
+                <Text numberOfLines={1} className="mb-1 text-[11px] font-semibold" style={{ color: color.text }}>
                   {days.length >= 3 ? `Semana ${w + 1}` : `S${w + 1}`}
                 </Text>
                 <View className="flex-row" style={{ gap: DESK_GAP }}>
@@ -211,7 +220,7 @@ function MonthGrid({ habits, done, selected, now, onSelect, weeks }: GridProps &
               {habits.map((h) => (
                 <View key={h.key} style={{ height: DESK_ROW_H, gap: DESK_GAP }} className="flex-row items-center">
                   {days.map((d) => (
-                    <Cell key={d} h={h} date={d} size={DESK_CELL} done={done} now={now} />
+                    <Cell key={d} h={h} date={d} size={DESK_CELL} done={done} now={now} color={color.fill} />
                   ))}
                 </View>
               ))}

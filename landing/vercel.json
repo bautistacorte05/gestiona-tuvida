@@ -1,0 +1,9 @@
+{
+  "redirects": [
+    {
+      "source": "/android",
+      "destination": "https://github.com/bautistacorte05/gestiona-tuvida/releases/download/android/Gestionatuvida.apk",
+      "permanent": false
+    }
+  ]
+}

@@ -46,7 +46,7 @@ export default function DateField({ value, onChange }: { value: string; onChange
               display="inline"
               themeVariant={scheme}
               accentColor={c['shu-500']}
-              onChange={(_, d) => d && setDraft(d)}
+              onValueChange={(_, d) => setDraft(d)}
               style={{ alignSelf: 'stretch' }}
             />
             <Pressable onPress={confirm} className="mt-3 items-center justify-center rounded-lg bg-shu-500 py-2.5">

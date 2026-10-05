@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -18,6 +19,7 @@ import { useDb, type Entry } from '../../lib/db';
 import { buildHabits, doneDatesByKey, habitRows, isActiveInMonth, monthSummary } from '../../lib/habits';
 import { useCategoryName } from '../../lib/names';
 import { greeting } from '../../lib/streak';
+import { useViewedDate } from '../../lib/theme';
 import { formatMinutes, minutesByDay } from '../../lib/time';
 
 type Editing = { category: Category; sub: Subcategory; entry?: Entry };
@@ -31,6 +33,14 @@ export default function HoyScreen() {
   const nameOf = useCategoryName();
   const t = today();
   const [date, setDate] = useState(today);
+  // Con colores por semana, la app entera toma el color de la semana que se está mirando acá.
+  const setViewedDate = useViewedDate((s) => s.setDate);
+  useFocusEffect(
+    useCallback(() => {
+      setViewedDate(date);
+      return () => setViewedDate(null);
+    }, [date, setViewedDate]),
+  );
   const [editing, setEditing] = useState<Editing | null>(null);
 
   const allEntries = useDb((s) => s.entries);

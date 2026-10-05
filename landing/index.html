@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Gestiona tu vida</title>
-  <meta name="description" content="Descargá Gestiona tu vida para Windows." />
+  <meta name="description" content="Descargá Gestiona tu vida para Windows y Android." />
   <style>
     :root {
       --ink-950: #16120f; --ink-900: #1f1a16; --ink-800: #2a2118; --ink-400: #a6987c; --ink-300: #c4b69c; --ink-100: #ede3d3;
@@ -25,6 +25,9 @@
       font-size: 20px; font-weight: 700; padding: 18px 24px; border-radius: 12px;
     }
     .download:hover, .download:focus-visible { background: var(--shu-600); }
+    .download.alt { background: transparent; border: 2px solid var(--shu-500); color: var(--ink-100); }
+    .download.alt:hover, .download.alt:focus-visible { background: var(--ink-900); }
+    .card + .card { margin-top: 16px; }
     .req { color: var(--ink-400); font-size: 14px; text-align: center; margin: 10px 0 40px; }
     .card { background: var(--ink-900); border: 1px solid var(--ink-800); border-radius: 12px; padding: 20px 24px; }
     .card h2 { font-size: 18px; margin: 0 0 12px; }
@@ -41,7 +44,7 @@
 <body>
   <main>
     <div id="banner" class="banner" role="status"></div>
-    <p class="eyebrow">Para Windows</p>
+    <p class="eyebrow">Para Windows y Android</p>
     <h1>Gestiona tu vida</h1>
     <p class="lead">Tus hábitos, finanzas, metas y tu mascota, en un solo lugar. Entrás con tu cuenta y se sincroniza con el celular.</p>
 
@@ -50,14 +53,29 @@
     </a>
     <p class="req">Windows 10 u 11 · Se actualiza sola</p>
 
+    <a class="download alt" href="/android">
+      Descargar para Android
+    </a>
+    <p class="req">Celulares y tablets Android</p>
+
     <section class="card">
-      <h2>Cómo instalarla</h2>
+      <h2>Cómo instalarla en Windows</h2>
       <ol>
         <li>Tocá el botón de arriba y abrí el archivo <strong>Gestionatuvida.exe</strong> cuando termine de bajar.</li>
         <li>Si aparece una pantalla azul que dice <strong>"Windows protegió su PC"</strong>, es normal: tocá <strong>"Más información"</strong> y después <strong>"Ejecutar de todas formas"</strong>.</li>
         <li>Seguí los pasos del instalador. Al terminar vas a tener <strong>Gestiona tu vida</strong> en el escritorio.</li>
       </ol>
       <p class="note">Ese aviso aparece porque la app es nueva y todavía no tiene firma digital, no porque sea peligrosa. Solo aparece la primera vez.</p>
+    </section>
+
+    <section class="card">
+      <h2>Cómo instalarla en Android</h2>
+      <ol>
+        <li>Desde el celular o la tablet, tocá <strong>"Descargar para Android"</strong> y abrí el archivo <strong>Gestionatuvida.apk</strong> cuando termine de bajar.</li>
+        <li>Si te dice que no se pueden instalar apps de este origen, tocá <strong>"Ajustes"</strong>, activá <strong>"Permitir de esta fuente"</strong> y volvé atrás.</li>
+        <li>Tocá <strong>"Instalar"</strong>. Si aparece un aviso de Play Protect, tocá <strong>"Instalar de todas formas"</strong>.</li>
+      </ol>
+      <p class="note">El aviso aparece porque la app no viene de Play Store, no porque sea peligrosa.</p>
     </section>
   </main>
   <script>

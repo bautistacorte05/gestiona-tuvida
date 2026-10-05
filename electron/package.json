@@ -1,7 +1,7 @@
 {
   "name": "gestion-squali-desktop",
   "productName": "Gestiona tu vida",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Gestiona tu vida para Windows",
   "author": "bautistacorte05",
   "main": "main.js",

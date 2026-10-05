@@ -10,7 +10,7 @@ import { useDb } from '../../lib/db';
 import { pickAndResizeImage } from '../../lib/image';
 import { signOutWithConfirm } from '../../lib/signOut';
 import { syncNow, useSyncStatus } from '../../lib/sync';
-import { ACCENTS, useAccent, useThemeColors } from '../../lib/theme';
+import { ACCENTS, useBaseAccent, useSavedWeekColorIds, useThemeColors, VARIED_WEEK_COLORS, weekColorsOn, type AccentId } from '../../lib/theme';
 import { useUiPrefs } from '../../lib/uiPrefs';
 
 const INPUT = 'rounded-lg border border-ink-700 bg-ink-900 px-3 py-2.5 text-base text-ink-100';
@@ -191,13 +191,15 @@ function AppearanceCard() {
         {appearance === 'system' ? 'Sigue el modo claro u oscuro de este dispositivo.' : 'Solo cambia en este dispositivo.'}
       </Text>
       <AccentPicker />
+      <WeekColorsPicker />
     </View>
   );
 }
 
 /** Color de la app: se guarda en el perfil de la cuenta, así es el mismo en el celular y en la PC. */
 function AccentPicker() {
-  const accent = useAccent();
+  const accent = useBaseAccent();
+  const byWeek = useDb((s) => weekColorsOn(s.userProfile[0]));
   const updateUserProfile = useDb((s) => s.updateUserProfile);
   const c = useThemeColors();
   return (
@@ -223,7 +225,96 @@ function AccentPicker() {
           );
         })}
       </View>
-      <Text className="text-xs text-ink-500">Se guarda en tu cuenta: es el mismo en el celular y en la PC.</Text>
+      <Text className="text-xs text-ink-500">
+        {byWeek
+          ? 'Ahora la app usa los colores de las semanas (abajo). Este vuelve con "Todo el mes igual".'
+          : 'Se guarda en tu cuenta: es el mismo en el celular y en la PC.'}
+      </Text>
+    </View>
+  );
+}
+
+/**
+ * Color de cada semana del mes en la grilla de hábitos de Hoy. Sin elegir (o "Todo el mes igual"),
+ * todas usan el color de la app. Se guarda en el perfil, igual que el color de la app.
+ */
+function WeekColorsPicker() {
+  const saved = useDb((s) => s.userProfile[0]?.weekColors);
+  const on = useDb((s) => weekColorsOn(s.userProfile[0]));
+  const updateUserProfile = useDb((s) => s.updateUserProfile);
+  const ids = useSavedWeekColorIds();
+  const c = useThemeColors();
+  const [open, setOpen] = useState<number | null>(null);
+
+  // "Todo el mes igual" no borra los colores elegidos: al volver a "Uno por semana" siguen ahí.
+  // Los de ejemplo (VARIED_WEEK_COLORS) solo se ponen la primera vez, si nunca se eligió ninguno.
+  const presets = [
+    { label: 'Todo el mes igual', active: !on, onPress: () => updateUserProfile({ weekColorsOff: true }) },
+    { label: 'Uno por semana', active: on, onPress: () => updateUserProfile(saved ? { weekColorsOff: false } : { weekColors: [...VARIED_WEEK_COLORS], weekColorsOff: false }) },
+  ];
+
+  /** Elegir el color de una semana activa "Uno por semana". */
+  const pick = (week: number, id: AccentId) => {
+    if (ids[week] !== id || !on) updateUserProfile({ weekColors: ids.map((x, i) => (i === week ? id : x)), weekColorsOff: false });
+    setOpen(null);
+  };
+
+  return (
+    <View className="gap-2 border-t border-ink-800 pt-3">
+      <Text className="text-sm text-ink-400">Colores de las semanas</Text>
+      <View className="flex-row gap-2">
+        {presets.map((p) => (
+          <Pressable
+            key={p.label}
+            onPress={() => {
+              if (!p.active) p.onPress();
+              setOpen(null);
+            }}
+            accessibilityRole="radio"
+            accessibilityState={{ checked: p.active }}
+            className={`flex-1 items-center rounded-lg border py-2.5 ${p.active ? 'border-shu-500 bg-shu-500/15' : 'border-ink-700'}`}>
+            <Text className={`text-sm ${p.active ? 'font-semibold text-shu-300' : 'text-ink-300'}`}>{p.label}</Text>
+          </Pressable>
+        ))}
+      </View>
+      {ids.map((id, week) => {
+        const accent = ACCENTS.find((a) => a.id === id) ?? ACCENTS[0];
+        const isOpen = open === week;
+        return (
+          <View key={week} className={on ? '' : 'opacity-50'}>
+            <Pressable
+              onPress={() => setOpen(isOpen ? null : week)}
+              accessibilityRole="button"
+              accessibilityLabel={`Semana ${week + 1}: ${accent.label}. Cambiar color`}
+              className="min-h-11 flex-row items-center gap-3 rounded-lg px-1 active:bg-ink-800">
+              <Text className="w-20 text-sm text-ink-200">Semana {week + 1}</Text>
+              <View className="h-6 w-6 rounded-full" style={{ backgroundColor: accent[500] }} />
+              <Text className="flex-1 text-sm text-ink-300">{accent.label}</Text>
+              <Text className="text-ink-500">{isOpen ? '⌃' : '›'}</Text>
+            </Pressable>
+            {isOpen && (
+              <View className="flex-row flex-wrap gap-2 pb-2 pl-1 pt-1">
+                {ACCENTS.map((a) => {
+                  const active = a.id === id;
+                  return (
+                    <Pressable
+                      key={a.id}
+                      onPress={() => pick(week, a.id)}
+                      accessibilityRole="radio"
+                      accessibilityState={{ checked: active }}
+                      accessibilityLabel={a.label}
+                      className="h-11 w-11 items-center justify-center rounded-full border-2"
+                      style={{ borderColor: active ? c['ink-100'] : 'transparent' }}>
+                      <View className="h-8 w-8 rounded-full" style={{ backgroundColor: a[500] }} />
+                    </Pressable>
+                  );
+                })}
+              </View>
+            )}
+          </View>
+        );
+      })}
+      <Text className="text-xs text-ink-500">Toda la app toma el color de la semana: la de hoy o, en Hoy, la que estés mirando. Si un mes tiene 6.ª semana, usa el color de la 5.ª. Se guarda en tu cuenta.</Text>
     </View>
   );
 }

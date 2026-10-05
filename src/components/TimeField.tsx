@@ -50,7 +50,7 @@ export default function TimeField({ value, onChange }: { value: string; onChange
               is24Hour
               themeVariant={scheme}
               accentColor={c['shu-500']}
-              onChange={(_, d) => d && setDraft(d)}
+              onValueChange={(_, d) => setDraft(d)}
               style={{ alignSelf: 'stretch' }}
             />
             <View className="mt-3 flex-row gap-2">

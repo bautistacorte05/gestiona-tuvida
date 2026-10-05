@@ -149,6 +149,10 @@ export interface UserProfile {
   fotoUri?: string
   /** Color de la app (Ajustes → Apariencia, ver lib/theme.ts). Sin valor = rojo. */
   accent?: AccentId
+  /** Color de cada semana del mes en la grilla de hábitos (Ajustes → Apariencia). Sin valor = todas con `accent`. */
+  weekColors?: AccentId[]
+  /** "Todo el mes igual" con colores por semana ya elegidos: quedan guardados para volver a "Uno por semana". */
+  weekColorsOff?: boolean
   /** Meta de horas de trabajo por semana (hoja de Trabajo). Sin valor = 40. */
   metaHorasSemana?: number
   /** Pasos del ritual de la mañana que usa (ids de config/ritual.ts). Sin valor = todos. */
