@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
-import { useDb, type Entry } from '../lib/db';
+import { useDb } from '../lib/db';
 import { monthKey } from '../lib/dates';
 import { itemsTotal, pctChange, pricesByProduct, productKey } from '../lib/prices';
 import { useThemeColors } from '../lib/theme';

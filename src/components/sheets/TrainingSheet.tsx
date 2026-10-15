@@ -4,22 +4,18 @@ import { today } from '../../lib/dates';
 import { useDb, type Entry } from '../../lib/db';
 import { useFindSub } from '../../lib/names';
 import { computeStreak } from '../../lib/streak';
-import { groupStats, isTraining, lastWeeks, newestFirst, weekSummary } from '../../lib/training';
+import { groupStats, isExerciseEntry, isTraining, lastWeeks, newestFirst, weekSummary } from '../../lib/training';
 import EntryForm from '../EntryForm';
-import { SheetScreen } from './kit';
-import { TrainingCalendar, TrainingGroups, TrainingQuickLog, TrainingRecent, TrainingWeekHero } from './trainingParts';
+import { PrimaryButton, SheetScreen } from './kit';
+import { TrainingCalendar, TrainingGroups, TrainingLastWorkout, TrainingPRs, TrainingProgress, TrainingRecent, TrainingWeekHero } from './trainingParts';
+import WorkoutForm from './WorkoutForm';
 
-/**
- * Hoja de Entrenamiento: la semana, los días de las últimas semanas, anotar el de hoy, qué grupos
- * se trabajaron y los últimos registros. Los días salen de lo que se tilda en Hoy o de los
- * registros de Gimnasio (no hace falta cargar nada para que cuenten).
- */
 export default function TrainingSheet() {
   const found = useFindSub('entrenamiento', 'gimnasio');
   const entries = useDb((s) => s.entries);
   const checks = useDb((s) => s.checks);
-  // Registro abierto en el formulario completo (sin `entry` = uno nuevo).
   const [editing, setEditing] = useState<{ entry?: Entry } | null>(null);
+  const [workout, setWorkout] = useState<{ entry?: Entry } | null>(null);
   const now = today();
 
   const groupOptions = useMemo(() => found?.sub.fields.find((f) => f.key === 'grupo')?.options ?? [], [found]);
@@ -28,18 +24,32 @@ export default function TrainingSheet() {
   const groups = useMemo(() => groupStats(entries, groupOptions, now), [entries, groupOptions, now]);
   const weeks = useMemo(() => lastWeeks(now), [now]);
   const recent = useMemo(() => entries.filter(isTraining).sort(newestFirst), [entries]);
+  const exerciseEntries = useMemo(() => entries.filter(isExerciseEntry), [entries]);
 
   if (!found) return null;
 
+  const overlay =
+    workout !== null ? (
+      <WorkoutForm entry={workout.entry} defaultDate={now} onClose={() => setWorkout(null)} />
+    ) : editing ? (
+      <EntryForm category={found.category} sub={found.sub} entry={editing.entry} defaultDate={now} onClose={() => setEditing(null)} />
+    ) : null;
+
+  const openEntry = (entry: Entry) => {
+    if (entry.values.ejercicio) setWorkout({ entry });
+    else setEditing({ entry });
+  };
+
   return (
-    <SheetScreen
-      categoryId="entrenamiento"
-      overlay={editing ? <EntryForm category={found.category} sub={found.sub} entry={editing.entry} defaultDate={now} onClose={() => setEditing(null)} /> : null}>
+    <SheetScreen categoryId="entrenamiento" overlay={overlay}>
       <TrainingWeekHero days={week.days} done={week.done} now={now} trainedDays={week.trainedDays} minutes={week.minutes} streak={streak} />
-      <TrainingCalendar weeks={weeks} done={week.done} now={now} />
-      <TrainingQuickLog groups={groupOptions} />
+      <PrimaryButton label="Anotar entrenamiento" onPress={() => setWorkout({})} />
+      <TrainingLastWorkout entries={exerciseEntries} now={now} />
+      <TrainingPRs entries={exerciseEntries} />
+      <TrainingProgress entries={exerciseEntries} />
       <TrainingGroups stats={groups} now={now} />
-      <TrainingRecent entries={recent} sub={found.sub} now={now} onOpen={(entry) => setEditing({ entry })} onAdd={() => setEditing({})} />
+      <TrainingCalendar weeks={weeks} done={week.done} now={now} />
+      <TrainingRecent entries={recent} sub={found.sub} now={now} onOpen={openEntry} onAdd={() => setEditing({})} />
     </SheetScreen>
   );
 }

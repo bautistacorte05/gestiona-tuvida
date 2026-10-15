@@ -14,6 +14,50 @@ export type DayState = 'done' | 'today' | 'missed' | 'future'
 
 export const isTraining = (e: Entry) => e.categoryId === 'entrenamiento' && e.subId === 'gimnasio'
 
+export const isExerciseEntry = (e: Entry) => isTraining(e) && !!e.values.ejercicio
+
+export interface ExerciseSummary {
+  maxWeight: number
+  sets: number
+  maxReps: number
+}
+
+export function exerciseSummary(e: Entry): ExerciseSummary | undefined {
+  if (!e.items?.length) return undefined
+  let maxWeight = 0
+  let maxReps = 0
+  for (const item of e.items) {
+    if (item.precio > maxWeight || (item.precio === maxWeight && item.cantidad > maxReps)) {
+      maxWeight = item.precio
+      maxReps = item.cantidad
+    }
+  }
+  return { maxWeight, sets: e.items.length, maxReps }
+}
+
+export interface PR {
+  exercise: string
+  weight: number
+  reps: number
+  date: string
+}
+
+export function personalRecords(entries: Entry[]): PR[] {
+  const byExercise = new Map<string, PR>()
+  for (const e of entries) {
+    if (!isExerciseEntry(e) || !e.items?.length) continue
+    const name = String(e.values.ejercicio)
+    for (const item of e.items) {
+      const w = item.precio
+      const current = byExercise.get(name)
+      if (!current || w > current.weight) {
+        byExercise.set(name, { exercise: name, weight: w, reps: item.cantidad, date: e.date })
+      }
+    }
+  }
+  return [...byExercise.values()].sort((a, b) => b.weight - a.weight)
+}
+
 /** Días con entrenamiento: tildados en Hoy o con un registro de Gimnasio. */
 export function trainingDays(entries: Entry[], checks: Check[]): Set<string> {
   const out = new Set<string>()
@@ -118,6 +162,61 @@ export function shortMinutes(min: number) {
   const h = Math.floor(m / 60)
   const r = m % 60
   return r ? `${h} h ${r}` : `${h} h`
+}
+
+export interface ExerciseDataPoint {
+  date: string
+  maxWeight: number
+  totalVolume: number
+  sets: number
+}
+
+export function exerciseHistory(entries: Entry[], exerciseName: string): ExerciseDataPoint[] {
+  const points: ExerciseDataPoint[] = []
+  for (const e of entries) {
+    if (!isExerciseEntry(e) || String(e.values.ejercicio) !== exerciseName || !e.items?.length) continue
+    let maxWeight = 0
+    let totalVolume = 0
+    for (const item of e.items) {
+      if (item.precio > maxWeight) maxWeight = item.precio
+      totalVolume += item.precio * item.cantidad
+    }
+    points.push({ date: e.date, maxWeight, totalVolume, sets: e.items.length })
+  }
+  return points.sort((a, b) => a.date.localeCompare(b.date))
+}
+
+export interface WorkoutDaySummary {
+  date: string
+  exercises: { name: string; maxWeight: number; sets: number; totalReps: number }[]
+}
+
+export function lastWorkoutDay(entries: Entry[]): WorkoutDaySummary | undefined {
+  const exerciseEntries = entries.filter(isExerciseEntry).sort(newestFirst)
+  if (exerciseEntries.length === 0) return undefined
+  const date = exerciseEntries[0].date
+  const dayEntries = exerciseEntries.filter((e) => e.date === date)
+  return {
+    date,
+    exercises: dayEntries.map((e) => {
+      const name = String(e.values.ejercicio)
+      let maxWeight = 0
+      let totalReps = 0
+      for (const item of e.items ?? []) {
+        if (item.precio > maxWeight) maxWeight = item.precio
+        totalReps += item.cantidad
+      }
+      return { name, maxWeight, sets: e.items?.length ?? 0, totalReps }
+    }),
+  }
+}
+
+export function exerciseNames(entries: Entry[]): string[] {
+  const names = new Set<string>()
+  for (const e of entries) {
+    if (isExerciseEntry(e)) names.add(String(e.values.ejercicio))
+  }
+  return [...names].sort((a, b) => a.localeCompare(b, 'es'))
 }
 
 /** Más nuevos primero (por fecha y, el mismo día, por cuándo se cargaron). */

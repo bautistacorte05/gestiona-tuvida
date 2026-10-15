@@ -12,6 +12,8 @@ import DayReview from '../../components/hoy/DayReview';
 import RitualPrompt from '../../components/hoy/RitualPrompt';
 import StreaksRow from '../../components/hoy/StreaksRow';
 import TodayHabits from '../../components/hoy/TodayHabits';
+import { FoodEntryRow } from '../../components/sheets/FoodSheet';
+import { SportEntryRow } from '../../components/sheets/SportsSheet';
 import { DayStack } from '../../components/TimeCharts';
 import { COLOR_CLASSES, DAILY_CATEGORIES, findSub, type Category, type Subcategory } from '../../config/categories';
 import { formatDay, monthKey, shiftDay, today } from '../../lib/dates';
@@ -149,6 +151,8 @@ export default function HoyScreen() {
                       {cat.icon} {nameOf(cat.id, cat.name)}
                     </Text>
                     {list.map((e) => {
+                      if (e.categoryId === 'comida' && e.subId === 'comidas') return <FoodEntryRow key={e.id} entry={e} />;
+                      if (e.categoryId === 'entrenamiento' && e.subId === 'deportes') return <SportEntryRow key={e.id} entry={e} />;
                       const found = findSub(e.categoryId, e.subId);
                       if (!found) return null;
                       return <EntryRow key={e.id} sub={found.sub} entry={e} showSub onPress={() => setEditing({ ...found, entry: e })} />;

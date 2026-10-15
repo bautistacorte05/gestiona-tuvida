@@ -105,3 +105,97 @@ export function sleepMoodInsight(sleep: Map<string, Entry>, mood: Map<string, En
 const oneDecimal = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 })
 /** 4.14 → "4,1". */
 export const decimal = (n: number) => oneDecimal.format(n)
+
+// ——— Puntaje, racha y calendario ———
+
+export const DEFAULT_SLEEP_GOAL = 8
+/** Una noche "buena" para la racha: 7 h o más. */
+export const SLEEP_OK_HOURS = 7
+
+const QUALITY_FACTOR: Record<string, number> = { 'Muy buena': 1, Buena: 0.85, Regular: 0.55, Mala: 0.25 }
+
+/** Puntaje 0–100: 70 % horas contra tu meta (pasarse mucho resta un poco) y 30 % calidad (sin calidad cuenta como "buena"). */
+export function sleepScore(hours: number, goal: number, quality?: string) {
+  const dur = hours <= goal ? hours / goal : Math.max(0.7, 1 - Math.max(0, hours - goal - 1) * 0.1)
+  const q = QUALITY_FACTOR[quality ?? ''] ?? 0.8
+  return Math.round(100 * (0.7 * Math.min(dur, 1) + 0.3 * q))
+}
+
+export function scoreLabel(score: number) {
+  return score >= 85 ? 'Excelente' : score >= 70 ? 'Dormiste bien' : score >= 50 ? 'Regular' : 'Dormiste poco'
+}
+
+/** Noches seguidas con 7 h o más, terminando hoy (o ayer si hoy todavía no se anotó). */
+export function sleepStreak(sleep: Map<string, Entry>, end: string) {
+  let day = sleep.has(end) ? end : shiftDay(end, -1)
+  let n = 0
+  while ((sleepHours(sleep.get(day)?.values.horas) ?? 0) >= SLEEP_OK_HOURS) {
+    n++
+    day = shiftDay(day, -1)
+  }
+  return n
+}
+
+/** Celdas del mes en semanas de lunes a domingo: null = hueco antes del día 1. */
+export function monthCells(mood: Map<string, Entry>, month: string) {
+  const [y, m] = month.split('-').map(Number)
+  const lead = (new Date(y, m - 1, 1).getDay() + 6) % 7
+  const total = new Date(y, m, 0).getDate()
+  const cells: ({ date: string; mood?: number } | null)[] = Array.from({ length: lead }, () => null)
+  for (let d = 1; d <= total; d++) {
+    const date = `${month}-${String(d).padStart(2, '0')}`
+    cells.push({ date, mood: moodLevel(mood.get(date)?.values.nivel) })
+  }
+  return cells
+}
+
+// ——— Diario del día (energía, estrés, hábitos, nota) y resumen semanal ———
+
+export const ENERGY = [
+  { level: 1, emoji: '🪫', label: 'Agotado' },
+  { level: 2, emoji: '😴', label: 'Baja' },
+  { level: 3, emoji: '😐', label: 'Normal' },
+  { level: 4, emoji: '🔋', label: 'Buena' },
+  { level: 5, emoji: '⚡', label: 'Plena' },
+] as const
+
+export const STRESS = [
+  { level: 1, emoji: '😌', label: 'Nada' },
+  { level: 2, emoji: '🙂', label: 'Poco' },
+  { level: 3, emoji: '😬', label: 'Medio' },
+  { level: 4, emoji: '😰', label: 'Mucho' },
+  { level: 5, emoji: '🤯', label: 'Al límite' },
+] as const
+
+export const HABITS = [
+  { id: 'respirar', emoji: '🌬️', label: 'Respirar' },
+  { id: 'caminar', emoji: '🚶', label: 'Caminar' },
+  { id: 'agradecer', emoji: '🙏', label: 'Agradecer' },
+  { id: 'sol', emoji: '☀️', label: 'Tomar sol' },
+  { id: 'estirar', emoji: '🤸', label: 'Estirar' },
+  { id: 'pantallas', emoji: '📵', label: 'Menos pantallas' },
+] as const
+
+const avg = (arr: number[]) => (arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : undefined)
+
+export interface WeekStats { sleep?: number; mood?: number; energy?: number; stress?: number; habits: number }
+
+function statsFor(days: string[], sleep: Map<string, Entry>, mood: Map<string, Entry>, diary: Map<string, Entry>): WeekStats {
+  const pick = (f: (d: string) => number | undefined) => avg(days.map(f).filter((n): n is number => n !== undefined))
+  return {
+    sleep: pick((d) => sleepHours(sleep.get(d)?.values.horas)),
+    mood: pick((d) => moodLevel(mood.get(d)?.values.nivel)),
+    energy: pick((d) => moodLevel(diary.get(d)?.values.energia)),
+    stress: pick((d) => moodLevel(diary.get(d)?.values.estres)),
+    habits: days.reduce((s, d) => {
+      const h = diary.get(d)?.values.habitos
+      return s + (Array.isArray(h) ? h.length : 0)
+    }, 0),
+  }
+}
+
+/** Los últimos 7 días (terminando en `end`) contra los 7 anteriores. */
+export function weekCompare(sleep: Map<string, Entry>, mood: Map<string, Entry>, diary: Map<string, Entry>, end: string) {
+  const range = (offset: number) => Array.from({ length: 7 }, (_, i) => shiftDay(end, -(6 + offset) + i))
+  return { cur: statsFor(range(0), sleep, mood, diary), prev: statsFor(range(7), sleep, mood, diary) }
+}

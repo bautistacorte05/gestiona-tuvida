@@ -54,10 +54,16 @@ export interface Subcategory {
     | 'reading-sheet'
     | 'wellbeing-sheet'
     | 'projects-sheet'
+    | 'sports-sheet'
+    | 'food-sheet'
+    | 'pet-home'
+    | 'pet-health'
+    | 'pet-feeding'
     | 'ritual'
     | 'week-planner'
     | 'notes'
     | 'life-wheel'
+    | 'budget'
 }
 
 export interface Category {
@@ -115,7 +121,7 @@ export const CATEGORIES: Category[] = [
             label: 'Categoría',
             type: 'select',
             multi: true,
-            options: ['Supermercado', 'Verdulería', 'Carnicería', 'Almacén', 'Farmacia', 'Combustible', 'Transporte', 'Servicios', 'Salidas', 'Ropa', 'Hogar', 'Salud', 'Mascota', 'Otros'],
+            options: ['Supermercado', 'Verdulería', 'Carnicería', 'Almacén', 'Farmacia', 'Combustible', 'Transporte', 'Servicios', 'Salidas', 'Ropa', 'Hogar', 'Salud', 'Mascota', 'Educación', 'Entretenimiento', 'Suscripciones', 'Regalos', 'Viajes', 'Impuestos', 'Otros'],
             required: true,
           },
           { key: 'lugar', label: 'Lugar / comercio', type: 'text' },
@@ -146,6 +152,7 @@ export const CATEGORIES: Category[] = [
           { key: 'detalle', label: 'Nota', type: 'text' },
         ],
       },
+      { id: 'presupuestos', name: 'Presupuestos', icon: '📋', fields: [], custom: 'budget' },
     ],
   },
   {
@@ -155,7 +162,6 @@ export const CATEGORIES: Category[] = [
     name: 'Entrenamiento',
     icon: '🏋️',
     color: 'orange',
-    landing: 'gimnasio',
     subcategories: [
       {
         id: 'gimnasio',
@@ -166,6 +172,19 @@ export const CATEGORIES: Category[] = [
           { key: 'grupo', label: 'Grupo muscular', type: 'select', multi: true, options: ['Pecho', 'Espalda', 'Piernas', 'Hombros', 'Brazos', 'Core', 'Full body'], required: true },
           { ...minutos, required: true },
           { key: 'intensidad', label: 'Intensidad (1-5)', type: 'number', aggregate: 'avg' },
+        ],
+      },
+      {
+        id: 'deportes',
+        name: 'Deportes',
+        icon: '🏅',
+        custom: 'sports-sheet',
+        fields: [
+          { key: 'disciplina', label: 'Disciplina', type: 'text', required: true },
+          { key: 'tipoSesion', label: 'Tipo de sesión', type: 'text', required: true },
+          { ...minutos, required: true },
+          { key: 'intensidad', label: 'Intensidad (1-5)', type: 'number', aggregate: 'avg' },
+          { key: 'notas', label: 'Notas', type: 'text' },
         ],
       },
     ],
@@ -210,23 +229,19 @@ export const CATEGORIES: Category[] = [
     name: 'Comida',
     icon: '🍽️',
     color: 'amber',
+    landing: 'comidas',
     subcategories: [
       {
         id: 'comidas',
         name: 'Comidas',
         icon: '🥗',
+        custom: 'food-sheet',
         fields: [
           { key: 'momento', label: 'Momento', type: 'select', options: ['Desayuno', 'Almuerzo', 'Merienda', 'Cena', 'Snack'], required: true },
           { key: 'que', label: '¿Qué comiste?', type: 'text', required: true },
           { key: 'calorias', label: 'Calorías', type: 'number', unit: 'kcal', aggregate: 'sum' },
           { key: 'saludable', label: '¿Saludable?', type: 'select', options: ['Sí', 'Más o menos', 'No'] },
         ],
-      },
-      {
-        id: 'agua',
-        name: 'Agua',
-        icon: '💧',
-        fields: [{ key: 'vasos', label: 'Vasos', type: 'number', required: true, aggregate: 'sum' }],
       },
     ],
   },
@@ -294,7 +309,9 @@ export const CATEGORIES: Category[] = [
     name: 'Mascota',
     icon: '🐾',
     color: 'pink',
+    landing: 'inicio',
     subcategories: [
+      { id: 'inicio', name: 'Panel', icon: '🏠', fields: [], custom: 'pet-home' },
       { id: 'perfil', name: 'Perfil / DNI', icon: '🪪', fields: [], custom: 'pet-profile' },
       {
         id: 'paseos',
@@ -308,6 +325,7 @@ export const CATEGORIES: Category[] = [
         id: 'alimento',
         name: 'Alimentación',
         icon: '🦴',
+        custom: 'pet-feeding',
         fields: [
           { key: 'tipo', label: 'Tipo', type: 'select', multi: true, options: ['Balanceado', 'Casero', 'Premio', 'Otro'], required: true },
           { key: 'gramos', label: 'Cantidad', type: 'number', unit: 'g', aggregate: 'sum' },
@@ -317,6 +335,7 @@ export const CATEGORIES: Category[] = [
         id: 'salud',
         name: 'Salud / Veterinario',
         icon: '🩺',
+        custom: 'pet-health',
         fields: [
           { key: 'motivo', label: 'Motivo', type: 'select', multi: true, options: ['Control', 'Vacuna', 'Desparasitación', 'Baño', 'Enfermedad', 'Otro'], required: true },
           { key: 'nombre', label: 'Vacuna / medicamento', type: 'text' },

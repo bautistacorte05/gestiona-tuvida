@@ -3,19 +3,25 @@ import { Fragment, type ReactNode } from 'react';
 import { Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import BudgetView from '../../../../components/BudgetView';
 import DailyGoalsView from '../../../../components/DailyGoalsView';
 import FinanceHomeView from '../../../../components/FinanceHomeView';
 import LifeWheelView from '../../../../components/LifeWheelView';
 import LongGoalsView from '../../../../components/LongGoalsView';
 import NotesView from '../../../../components/NotesView';
+import PetFeedingView from '../../../../components/PetFeedingView';
+import PetHealthView from '../../../../components/PetHealthView';
+import PetHomeView from '../../../../components/PetHomeView';
 import PetLostView from '../../../../components/PetLostView';
 import PetProfileView from '../../../../components/PetProfileView';
 import PetTrainingView from '../../../../components/PetTrainingView';
 import PetWalkLiveView from '../../../../components/PetWalkLiveView';
 import RitualView from '../../../../components/RitualView';
+import FoodSheet from '../../../../components/sheets/FoodSheet';
 import FootballSheet from '../../../../components/sheets/FootballSheet';
 import ProjectsSheet from '../../../../components/sheets/ProjectsSheet';
 import ReadingSheet from '../../../../components/sheets/ReadingSheet';
+import SportsSheet from '../../../../components/sheets/SportsSheet';
 import TrainingSheet from '../../../../components/sheets/TrainingSheet';
 import WellbeingSheet from '../../../../components/sheets/WellbeingSheet';
 import WorkSheet from '../../../../components/sheets/WorkSheet';
@@ -44,13 +50,19 @@ function renderSub(found: { category: Category; sub: Subcategory } | undefined):
 
   if (found.sub.custom === 'pet-walk-live') return <PetWalkLiveView />;
   if (found.sub.custom === 'finance-home') return <FinanceHomeView />;
+  if (found.sub.custom === 'budget') return <BudgetView />;
   if (found.sub.custom === 'daily-goals') return <DailyGoalsView />;
   if (found.sub.custom === 'long-goals') return <LongGoalsView />;
+  if (found.sub.custom === 'pet-feeding') return <PetFeedingView />;
+  if (found.sub.custom === 'pet-health') return <PetHealthView />;
+  if (found.sub.custom === 'pet-home') return <PetHomeView />;
   if (found.sub.custom === 'pet-profile') return <PetProfileView />;
   if (found.sub.custom === 'pet-lost') return <PetLostView />;
   if (found.sub.custom === 'pet-training') return <PetTrainingView />;
   // Hojas de categoría (una por categoría, con todas sus secciones).
   if (found.sub.custom === 'training-sheet') return <TrainingSheet />;
+  if (found.sub.custom === 'food-sheet') return <FoodSheet />;
+  if (found.sub.custom === 'sports-sheet') return <SportsSheet />;
   if (found.sub.custom === 'work-sheet') return <WorkSheet />;
   if (found.sub.custom === 'football-sheet') return <FootballSheet />;
   if (found.sub.custom === 'reading-sheet') return <ReadingSheet />;

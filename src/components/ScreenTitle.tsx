@@ -13,7 +13,8 @@ const INPUT = 'rounded-lg border border-ink-700 bg-ink-900 px-3 py-2.5 text-base
  * Sin `subId` es el título de la hoja de toda la categoría (ícono y nombre de la categoría).
  */
 export default function ScreenTitle({ categoryId, subId }: { categoryId: string; subId?: string }) {
-  if (!subId) return <CategoryTitle categoryId={categoryId} />;
+  const found = useFindSub(categoryId, subId ?? categoryId);
+  if (!subId || found?.category.landing) return <CategoryTitle categoryId={categoryId} />;
   return <SubTitle categoryId={categoryId} subId={subId} />;
 }
 

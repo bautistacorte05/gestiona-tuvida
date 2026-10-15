@@ -14,6 +14,7 @@ import PeriodPicker, { usePeriod, WEEK_LABELS } from './PeriodPicker';
 import PetSwitcher from './PetSwitcher';
 import SavingsInsights from './SavingsInsights';
 import BackButton from './BackButton';
+import FinanceEntryForm from './FinanceEntryForm';
 import ScreenTitle from './ScreenTitle';
 
 export default function SubView({ category, sub }: { category: Category; sub: Subcategory }) {
@@ -127,13 +128,15 @@ export default function SubView({ category, sub }: { category: Category; sub: Su
 
         {nextReminder && <ReminderCallout field={reminderField!} entry={nextReminder.e} date={nextReminder.date} onPress={() => setEditing(nextReminder.e)} />}
 
-        <View className="flex-row flex-wrap gap-3">
-          <Stat label="Registros" value={String(entries.length)} />
-          <Stat label="Días activos" value={`${activeDays} / ${days}`} />
-          {metrics.map((m) => (
-            <Stat key={m.field.key} label={m.field.aggregate === 'avg' ? `${m.field.label} (prom.)` : `${m.field.label} ${sub.periods ? period.noun : 'del mes'}`} value={formatValue(m.field, m.value)} />
-          ))}
-        </View>
+        {!(category.id === 'finanzas' && sub.itemized) && (
+          <View className="flex-row flex-wrap gap-3">
+            <Stat label="Registros" value={String(entries.length)} />
+            <Stat label="Días activos" value={`${activeDays} / ${days}`} />
+            {metrics.map((m) => (
+              <Stat key={m.field.key} label={m.field.aggregate === 'avg' ? `${m.field.label} (prom.)` : `${m.field.label} ${sub.periods ? period.noun : 'del mes'}`} value={formatValue(m.field, m.value)} />
+            ))}
+          </View>
+        )}
 
         {!sub.savings && !sub.periods && (
           <Card>
@@ -193,9 +196,11 @@ export default function SubView({ category, sub }: { category: Category; sub: Su
         </View>
       </ScrollView>
 
-      {editing && (
+      {editing && (category.id === 'finanzas' ? (
+        <FinanceEntryForm category={category} sub={sub} entry={editing === 'new' ? undefined : editing} defaultDate={sub.periods ? period.defaultDate : isCurrentMonth ? today() : `${month}-01`} onClose={() => setEditing(null)} />
+      ) : (
         <EntryForm category={category} sub={sub} entry={editing === 'new' ? undefined : editing} defaultDate={sub.periods ? period.defaultDate : isCurrentMonth ? today() : `${month}-01`} onClose={() => setEditing(null)} />
-      )}
+      ))}
     </SafeAreaView>
   );
 }

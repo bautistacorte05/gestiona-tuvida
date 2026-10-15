@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Pressable, Text, TextInput, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
 import type { Subcategory } from '../../config/categories';
 import { formatDay, today } from '../../lib/dates';
@@ -7,7 +7,21 @@ import { useDb, type Entry } from '../../lib/db';
 import { markDone } from '../../lib/sheets';
 import { formatValue, tagsOf } from '../../lib/stats';
 import { useThemeColors } from '../../lib/theme';
-import { dayState, groupHint, joinNames, listDate, shortMinutes, weekLabel, type DayState, type GroupStat } from '../../lib/training';
+import {
+  dayState,
+  exerciseHistory,
+  exerciseNames,
+  exerciseSummary,
+  groupHint,
+  joinNames,
+  lastWorkoutDay,
+  listDate,
+  personalRecords,
+  shortMinutes,
+  weekLabel,
+  type DayState,
+  type GroupStat,
+} from '../../lib/training';
 import { parseNum } from '../ItemsEditor';
 import TrashButton from '../TrashButton';
 import { BigStat, Chip, Choice, Hero, PrimaryButton, Section, SmallButton } from './kit';
@@ -273,6 +287,157 @@ export function TrainingQuickLog({ groups }: { groups: string[] }) {
   );
 }
 
+// ——— Último entrenamiento ———
+
+export function TrainingLastWorkout({ entries, now }: { entries: Entry[]; now: string }) {
+  const workout = useMemo(() => lastWorkoutDay(entries), [entries]);
+  if (!workout || workout.exercises.length === 0) return null;
+
+  const totalSets = workout.exercises.reduce((a, ex) => a + ex.sets, 0);
+  const totalReps = workout.exercises.reduce((a, ex) => a + ex.totalReps, 0);
+
+  return (
+    <Section title="Último entrenamiento" right={<Text className="text-xs text-ink-400">{listDate(workout.date, now)}</Text>}>
+      <View className="gap-2">
+        {workout.exercises.map((ex) => (
+          <View key={ex.name} className="flex-row items-center justify-between rounded-xl border border-ink-800 bg-ink-950 px-3.5 py-2.5">
+            <View className="min-w-0 flex-1">
+              <Text numberOfLines={1} className="text-[15px] font-semibold text-ink-100">
+                {ex.name}
+              </Text>
+              <Text className="mt-0.5 text-xs text-ink-400">
+                {ex.sets} {ex.sets === 1 ? 'serie' : 'series'} · {ex.totalReps} reps
+              </Text>
+            </View>
+            {ex.maxWeight > 0 && (
+              <Text className="shrink-0 text-[15px] font-bold text-ink-100" style={{ fontVariant: ['tabular-nums'] }}>
+                {ex.maxWeight} kg
+              </Text>
+            )}
+          </View>
+        ))}
+      </View>
+      <View className="flex-row gap-4">
+        <Text className="text-xs text-ink-400">
+          {workout.exercises.length} {workout.exercises.length === 1 ? 'ejercicio' : 'ejercicios'} · {totalSets} series · {totalReps} reps totales
+        </Text>
+      </View>
+    </Section>
+  );
+}
+
+// ——— Records personales ———
+
+const TROPHY = ['🥇', '🥈', '🥉'];
+
+export function TrainingPRs({ entries }: { entries: Entry[] }) {
+  const prs = useMemo(() => personalRecords(entries), [entries]);
+  const [showAll, setShowAll] = useState(false);
+
+  if (prs.length === 0) return null;
+
+  const visible = showAll ? prs : prs.slice(0, 5);
+
+  return (
+    <Section title="Records personales" subtitle="Tu mejor peso en cada ejercicio">
+      <View className="overflow-hidden rounded-xl border border-ink-800 bg-ink-950">
+        {visible.map((pr, i, list) => (
+          <View key={pr.exercise} className={`flex-row items-center gap-3 px-3.5 py-2.5 ${i < list.length - 1 ? 'border-b border-ink-800' : ''}`}>
+            <Text className="w-7 text-center text-base">{i < 3 ? TROPHY[i] : `${i + 1}.`}</Text>
+            <View className="min-w-0 flex-1">
+              <Text numberOfLines={1} className="text-[15px] font-semibold text-ink-100">
+                {pr.exercise}
+              </Text>
+              <Text className="mt-0.5 text-xs text-ink-400">
+                {pr.reps} reps · {pr.date.slice(0, 4) === new Date().getFullYear().toString() ? formatDay(pr.date, { day: 'numeric', month: 'short' }) : formatDay(pr.date, { day: 'numeric', month: 'short', year: 'numeric' })}
+              </Text>
+            </View>
+            <Text className="shrink-0 text-lg font-bold text-shu-300" style={{ fontVariant: ['tabular-nums'] }}>
+              {pr.weight} kg
+            </Text>
+          </View>
+        ))}
+      </View>
+      {prs.length > 5 && !showAll && <SmallButton label={`Ver los ${prs.length} ejercicios`} onPress={() => setShowAll(true)} />}
+    </Section>
+  );
+}
+
+// ——— Progreso por ejercicio ———
+
+export function TrainingProgress({ entries }: { entries: Entry[] }) {
+  const names = useMemo(() => exerciseNames(entries), [entries]);
+  const [selected, setSelected] = useState<string | null>(null);
+
+  const exerciseName = selected ?? names[0] ?? null;
+  const history = useMemo(() => (exerciseName ? exerciseHistory(entries, exerciseName) : []), [entries, exerciseName]);
+
+  if (names.length === 0) return null;
+
+  const maxW = Math.max(...history.map((p) => p.maxWeight), 1);
+  const lastPoints = history.slice(-10);
+
+  return (
+    <Section title="Progreso" subtitle="Peso máximo por sesión">
+      {/* Selector de ejercicio */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2 pb-1">
+        {names.map((name) => {
+          const active = name === exerciseName;
+          return (
+            <Pressable
+              key={name}
+              onPress={() => setSelected(name)}
+              className={`h-8 items-center justify-center rounded-full px-3 ${active ? 'border border-shu-400 bg-shu-500/20' : 'border border-ink-700'}`}>
+              <Text numberOfLines={1} className={`text-xs ${active ? 'font-semibold text-shu-300' : 'text-ink-300'}`}>
+                {name}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+
+      {lastPoints.length < 2 ? (
+        <View className="rounded-xl border border-dashed border-ink-800 p-5">
+          <Text className="text-center text-sm text-ink-500">Anotá al menos 2 sesiones de {exerciseName} para ver el progreso.</Text>
+        </View>
+      ) : (
+        <View className="gap-2">
+          {/* Gráfico de barras */}
+          <View className="h-40 flex-row items-end gap-1.5 rounded-xl border border-ink-800 bg-ink-950 px-3 pb-3 pt-2">
+            {lastPoints.map((p) => {
+              const pct = maxW > 0 ? (p.maxWeight / maxW) * 100 : 0;
+              return (
+                <View key={p.date} className="flex-1 items-center gap-1" style={{ height: '100%', justifyContent: 'flex-end' }}>
+                  <Text className="text-[9px] text-ink-400" style={{ fontVariant: ['tabular-nums'] }}>
+                    {p.maxWeight}
+                  </Text>
+                  <View className="w-full rounded-t-md bg-shu-500" style={{ height: `${Math.max(pct, 4)}%` }} />
+                  <Text className="text-[9px] text-ink-500" style={{ fontVariant: ['tabular-nums'] }}>
+                    {Number(p.date.slice(8))}/{Number(p.date.slice(5, 7))}
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
+
+          {/* Resumen */}
+          {lastPoints.length >= 2 && (() => {
+            const first = lastPoints[0].maxWeight;
+            const last = lastPoints[lastPoints.length - 1].maxWeight;
+            const diff = last - first;
+            if (diff === 0) return null;
+            return (
+              <Text className={`text-center text-sm font-semibold ${diff > 0 ? 'text-shu-300' : 'text-kurenai-400'}`}>
+                {diff > 0 ? '↑' : '↓'} {Math.abs(diff)} kg desde la primera sesión
+              </Text>
+            );
+          })()}
+        </View>
+      )}
+    </Section>
+  );
+}
+
 // ——— Últimos entrenamientos ———
 
 export function TrainingRecent({
@@ -305,9 +470,11 @@ export function TrainingRecent({
       ) : (
         <View className="overflow-hidden rounded-2xl border border-ink-800 bg-ink-900">
           {entries.slice(0, shown).map((e, i, list) => {
-            const title = tagsOf(e.values.grupo).join(' · ') || 'Entrenamiento';
-            const hasMinutes = e.values.minutos !== undefined && e.values.minutos !== '';
-            const hasIntensity = e.values.intensidad !== undefined && e.values.intensidad !== '';
+            const isExercise = !!e.values.ejercicio;
+            const summary = isExercise ? exerciseSummary(e) : undefined;
+            const title = isExercise ? String(e.values.ejercicio) : tagsOf(e.values.grupo).join(' · ') || 'Entrenamiento';
+            const hasMinutes = !isExercise && e.values.minutos !== undefined && e.values.minutos !== '';
+            const hasIntensity = !isExercise && e.values.intensidad !== undefined && e.values.intensidad !== '';
             return (
               <View key={e.id} className={`flex-row items-center pr-1 ${i < list.length - 1 ? 'border-b border-ink-800' : ''}`}>
                 <Pressable
@@ -319,12 +486,23 @@ export function TrainingRecent({
                     <Text className="text-[15px] font-semibold text-ink-100">{title}</Text>
                     <Text className="mt-0.5 text-xs text-ink-400">{listDate(e.date, now)}</Text>
                   </View>
-                  <View className="items-end">
-                    {hasMinutes && !!minutosField && <Text className="text-[15px] font-bold text-ink-100">{formatValue(minutosField, e.values.minutos)}</Text>}
-                    {hasIntensity && !!intensityField && (
-                      <Text className="mt-0.5 text-xs text-shu-300">intensidad {formatValue(intensityField, e.values.intensidad)}</Text>
-                    )}
-                  </View>
+                  {isExercise && !!summary ? (
+                    <View className="items-end">
+                      <Text className="text-[15px] font-bold text-ink-100" style={{ fontVariant: ['tabular-nums'] }}>
+                        {summary.maxWeight} kg
+                      </Text>
+                      <Text className="mt-0.5 text-xs text-shu-300">
+                        {summary.sets} {summary.sets === 1 ? 'serie' : 'series'}
+                      </Text>
+                    </View>
+                  ) : (
+                    <View className="items-end">
+                      {hasMinutes && !!minutosField && <Text className="text-[15px] font-bold text-ink-100">{formatValue(minutosField, e.values.minutos)}</Text>}
+                      {hasIntensity && !!intensityField && (
+                        <Text className="mt-0.5 text-xs text-shu-300">intensidad {formatValue(intensityField, e.values.intensidad)}</Text>
+                      )}
+                    </View>
+                  )}
                 </Pressable>
                 <TrashButton what={`el entrenamiento (${title}, ${listDate(e.date, now)})`} onDelete={() => useDb.getState().deleteEntry(e.id)} />
               </View>

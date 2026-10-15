@@ -3,7 +3,6 @@ import { usePathname } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
-import { COLOR_CLASSES } from '../config/categories';
 import { useAuth } from '../lib/auth';
 import { useDb } from '../lib/db';
 import { categoryIcon, subIcon, type MenuIconName } from '../lib/menuIcons';
@@ -61,7 +60,6 @@ export default function NavMenu({ onNavigate }: { onNavigate: (href: string) => 
 
       {categories.map((cat) => {
         const isOpen = toggled[cat.id] ?? cat.id === currentCat;
-        const colors = COLOR_CLASSES[cat.color];
         // Categoría con hoja propia: una sola entrada, directo a la hoja (sin desplegar secciones).
         if (cat.landing) {
           const active = cat.id === currentCat;
@@ -81,7 +79,7 @@ export default function NavMenu({ onNavigate }: { onNavigate: (href: string) => 
               onPress={() => setToggled((t) => ({ ...t, [cat.id]: !isOpen }))}
               className="mx-2 flex-row items-center gap-3 rounded-xl px-3 py-2.5 active:bg-ink-800/60">
               <Ionicons name={categoryIcon(cat.id)} size={20} color={c['shu-400']} />
-              <Text className={`flex-1 text-sm font-medium ${isOpen || cat.id === currentCat ? colors.text : 'text-ink-200'}`}>{cat.name}</Text>
+              <Text className={`flex-1 text-sm font-medium ${cat.id === currentCat ? 'font-semibold text-ink-100' : 'text-ink-200'}`}>{cat.name}</Text>
               <Text className="text-xs text-ink-500">{isOpen ? '▼' : '▶'}</Text>
             </Pressable>
             {isOpen && (

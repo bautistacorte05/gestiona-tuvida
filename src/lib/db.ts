@@ -6,7 +6,7 @@ import type { Item } from './prices'
 import type { AccentId } from './theme'
 
 /** Subcategorías de Mascota cuyos registros pertenecen a una mascota puntual. */
-export const PET_OWNED_SUBS = ['paseos', 'alimento', 'salud']
+export const PET_OWNED_SUBS = ['paseos', 'alimento', 'salud', 'medicacion']
 
 export interface Entry {
   id: string
@@ -157,6 +157,18 @@ export interface UserProfile {
   metaHorasSemana?: number
   /** Pasos del ritual de la mañana que usa (ids de config/ritual.ts). Sin valor = todos. */
   ritualPasos?: string[]
+  /** Presupuesto mensual por rubro (ej: { Supermercado: 20000, Salidas: 10000 }). */
+  budgets?: Record<string, number>
+  /** Disciplinas deportivas elegidas (ids de lib/sports.ts o nombres custom). */
+  sportDisciplines?: string[]
+  /** Disciplinas personalizadas creadas por el usuario (nombre → emoji). */
+  customSports?: Record<string, string>
+  /** Meta diaria de calorías (Comida). */
+  calorieGoal?: number
+  /** Meta diaria de vasos de agua (Comida). */
+  waterGoal?: number
+  /** Meta de horas de sueño por noche (Bienestar). */
+  sleepGoal?: number
   updatedAt: number
 }
 

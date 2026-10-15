@@ -1,6 +1,6 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useState } from 'react';
-import { Modal, Pressable, Text, View } from 'react-native';
+import { Modal, Platform, Pressable, Text, View } from 'react-native';
 
 import { useScheme, useThemeColors } from '../lib/theme';
 
@@ -12,7 +12,6 @@ const fromHHMM = (v: string) => {
   return d;
 };
 
-/** Hora opcional ("HH:MM" o ''), con el selector nativo de iOS en una hoja aparte (igual que DateField). */
 export default function TimeField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const [open, setOpen] = useState(false);
   const scheme = useScheme();
@@ -28,6 +27,26 @@ export default function TimeField({ value, onChange }: { value: string; onChange
     onChange(v);
     setOpen(false);
   };
+
+  if (Platform.OS === 'android') {
+    return (
+      <>
+        <Pressable onPress={openPicker} className="rounded-lg border border-ink-700 bg-ink-900 px-3 py-2.5" accessibilityLabel="Elegir hora">
+          <Text className={`text-base ${value ? 'text-ink-100' : 'text-ink-500'}`}>{value ? `🕒 ${value}` : '🕒 Hora'}</Text>
+        </Pressable>
+        {open && (
+          <DateTimePicker
+            value={draft}
+            mode="time"
+            display="default"
+            is24Hour
+            onValueChange={(_, d) => done(toHHMM(d))}
+            onDismiss={() => setOpen(false)}
+          />
+        )}
+      </>
+    );
+  }
 
   return (
     <>

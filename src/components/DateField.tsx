@@ -1,14 +1,12 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useState } from 'react';
-import { Modal, Pressable, Text, View } from 'react-native';
+import { Modal, Platform, Pressable, Text, View } from 'react-native';
 import { formatDay } from '../lib/dates';
 import { useScheme, useThemeColors } from '../lib/theme';
 
-/**
- * Botón que abre el selector de fecha nativo de iOS, en una hoja aparte a ancho completo.
- * Así no depende del ancho de la columna donde esté el botón (si no, el calendario podía
- * quedar recortado o corrido hacia la derecha cuando el campo estaba en una fila angosta).
- */
+const toISO = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
 export default function DateField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const [open, setOpen] = useState(false);
   const scheme = useScheme();
@@ -20,11 +18,29 @@ export default function DateField({ value, onChange }: { value: string; onChange
     setOpen(true);
   };
 
-  const confirm = () => {
-    const iso = `${draft.getFullYear()}-${String(draft.getMonth() + 1).padStart(2, '0')}-${String(draft.getDate()).padStart(2, '0')}`;
-    onChange(iso);
+  const confirm = (d: Date) => {
+    onChange(toISO(d));
     setOpen(false);
   };
+
+  if (Platform.OS === 'android') {
+    return (
+      <>
+        <Pressable onPress={openPicker} className="rounded-lg border border-ink-700 bg-ink-900 px-3 py-2.5">
+          <Text className="text-base text-ink-100">{value ? formatDay(value, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : 'Elegir fecha'}</Text>
+        </Pressable>
+        {open && (
+          <DateTimePicker
+            value={draft}
+            mode="date"
+            display="default"
+            onValueChange={(_, d) => confirm(d)}
+            onDismiss={() => setOpen(false)}
+          />
+        )}
+      </>
+    );
+  }
 
   return (
     <>
@@ -49,7 +65,7 @@ export default function DateField({ value, onChange }: { value: string; onChange
               onValueChange={(_, d) => setDraft(d)}
               style={{ alignSelf: 'stretch' }}
             />
-            <Pressable onPress={confirm} className="mt-3 items-center justify-center rounded-lg bg-shu-500 py-2.5">
+            <Pressable onPress={() => confirm(draft)} className="mt-3 items-center justify-center rounded-lg bg-shu-500 py-2.5">
               <Text className="font-medium text-washi">Confirmar</Text>
             </Pressable>
           </Pressable>
