@@ -3,7 +3,6 @@ import { router, usePathname } from 'expo-router';
 import { useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, View, type TextStyle } from 'react-native';
 
-import { COLOR_CLASSES } from '../config/categories';
 import Avatar from './Avatar';
 import { useAuth } from '../lib/auth';
 import { useDb } from '../lib/db';
@@ -206,7 +205,7 @@ export default function AppSidebar() {
                   accessibilityLabel={cat.name}
                   className="mx-2 flex-row items-center gap-3 rounded-xl px-3 py-2 hover:bg-ink-800/70 active:bg-ink-800">
                   <Ionicons name={categoryIcon(cat.id)} size={18} color={c['shu-400']} />
-                  <Text numberOfLines={1} className={`flex-1 text-sm font-medium ${cat.id === currentCat ? COLOR_CLASSES[cat.color].text : 'text-ink-200'}`}>
+                  <Text numberOfLines={1} className={`flex-1 text-sm font-medium ${cat.id === currentCat ? 'font-semibold text-ink-100' : 'text-ink-200'}`}>
                     {cat.name}
                   </Text>
                   <Text className="text-xs text-ink-500">{open ? '▼' : '▶'}</Text>

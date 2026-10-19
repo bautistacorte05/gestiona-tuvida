@@ -21,7 +21,7 @@
     "android": {
       "package": "com.squali.gestionatuvida",
       "adaptiveIcon": {
-        "backgroundColor": "#bf3b2e",
+        "backgroundColor": "#f5f0eb",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -48,7 +48,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#bf3b2e",
+          "backgroundColor": "#f5f0eb",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
