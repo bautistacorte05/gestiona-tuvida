@@ -4,7 +4,7 @@ import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, Tex
 import { confirm } from '../../lib/confirm';
 import { today } from '../../lib/dates';
 import { useDb, type Entry } from '../../lib/db';
-import { DEFAULT_EXERCISES, exercisesByGroup, GROUP_EMOJI, searchExercises, type Exercise } from '../../lib/exercises';
+import { allExercises, exercisesByGroup, GROUP_EMOJI, MUSCLE_GROUPS, searchExercises, type Exercise } from '../../lib/exercises';
 import { markDone } from '../../lib/sheets';
 import { useThemeColors } from '../../lib/theme';
 import { isExerciseEntry, newestFirst } from '../../lib/training';
@@ -40,6 +40,10 @@ export default function WorkoutForm({ entry, defaultDate, onClose }: Props) {
   const allEntries = useDb((s) => s.entries);
   const saved = useRef(false);
 
+  const profile = useDb((s) => s.userProfile[0]);
+  const customExercises = useMemo(() => profile?.customExercises ?? [], [profile?.customExercises]);
+  const exercises_ = useMemo(() => allExercises(customExercises), [customExercises]);
+
   const recentExercises = useMemo(() => allEntries.filter(isExerciseEntry).sort(newestFirst), [allEntries]);
 
   const lastWeightFor = (name: string): number | undefined => {
@@ -67,6 +71,22 @@ export default function WorkoutForm({ entry, defaultDate, onClose }: Props) {
   const [exercises, setExercises] = useState<ExerciseDraft[]>(initialExercises);
   const [picking, setPicking] = useState(!entry && initialExercises.length === 0);
   const [query, setQuery] = useState('');
+  const [creating, setCreating] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newGroup, setNewGroup] = useState<string>(MUSCLE_GROUPS[0]);
+  const [newEquip, setNewEquip] = useState('');
+
+  const saveCustomExercise = () => {
+    const name = newName.trim();
+    if (!name) return;
+    const ex: Exercise = { name, groups: [newGroup], equipment: newEquip.trim() || 'Otro' };
+    const updated = [...customExercises, ex];
+    useDb.getState().updateUserProfile({ customExercises: updated });
+    addExercise(ex);
+    setCreating(false);
+    setNewName('');
+    setNewEquip('');
+  };
 
   const addExercise = (ex: Exercise) => {
     const lastW = lastWeightFor(ex.name);
@@ -159,7 +179,7 @@ export default function WorkoutForm({ entry, defaultDate, onClose }: Props) {
 
   // ——— Exercise picker ———
   if (picking) {
-    const filtered = searchExercises(DEFAULT_EXERCISES, query);
+    const filtered = searchExercises(exercises_, query);
     const grouped = exercisesByGroup(filtered);
 
     return (
@@ -219,6 +239,60 @@ export default function WorkoutForm({ entry, defaultDate, onClose }: Props) {
                     </View>
                   );
                 })}
+
+                {/* Crear ejercicio custom */}
+                {!creating ? (
+                  <Pressable
+                    onPress={() => setCreating(true)}
+                    className="flex-row items-center justify-center gap-2 rounded-xl border border-dashed border-shu-500/40 bg-shu-500/10 py-3">
+                    <Text className="text-sm font-semibold text-shu-400">+ Crear ejercicio</Text>
+                  </Pressable>
+                ) : (
+                  <View className="rounded-xl border border-ink-700 bg-ink-950 p-4 gap-3">
+                    <Text className="text-sm font-bold text-ink-100">Nuevo ejercicio</Text>
+                    <TextInput
+                      className="rounded-lg border border-ink-700 bg-ink-900 px-4 py-2.5 text-[15px] text-ink-100"
+                      placeholder="Nombre (ej: Sillón de isquios)"
+                      placeholderTextColor={c['ink-500']}
+                      value={newName}
+                      onChangeText={setNewName}
+                      autoFocus
+                    />
+                    <View>
+                      <Text className="mb-1 text-xs text-ink-500">Grupo muscular</Text>
+                      <View className="flex-row flex-wrap gap-2">
+                        {MUSCLE_GROUPS.map((g) => (
+                          <Pressable
+                            key={g}
+                            onPress={() => setNewGroup(g)}
+                            className={`rounded-full px-3 py-1.5 ${newGroup === g ? 'bg-shu-500' : 'border border-ink-700 bg-ink-900'}`}>
+                            <Text className={`text-xs font-medium ${newGroup === g ? 'text-washi' : 'text-ink-300'}`}>
+                              {GROUP_EMOJI[g] ?? '💪'} {g}
+                            </Text>
+                          </Pressable>
+                        ))}
+                      </View>
+                    </View>
+                    <TextInput
+                      className="rounded-lg border border-ink-700 bg-ink-900 px-4 py-2.5 text-[15px] text-ink-100"
+                      placeholder="Equipamiento (ej: Máquina)"
+                      placeholderTextColor={c['ink-500']}
+                      value={newEquip}
+                      onChangeText={setNewEquip}
+                    />
+                    <View className="flex-row gap-2">
+                      <Pressable onPress={() => setCreating(false)} className="flex-1 items-center rounded-lg border border-ink-700 py-2.5">
+                        <Text className="text-sm font-medium text-ink-300">Cancelar</Text>
+                      </Pressable>
+                      <Pressable
+                        onPress={saveCustomExercise}
+                        disabled={!newName.trim()}
+                        className={`flex-1 items-center rounded-lg bg-shu-500 py-2.5 ${!newName.trim() ? 'opacity-40' : ''}`}>
+                        <Text className="text-sm font-medium text-washi">Agregar</Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                )}
               </ScrollView>
             </Pressable>
           </Pressable>

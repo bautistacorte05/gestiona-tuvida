@@ -62,6 +62,12 @@ export const DEFAULT_EXERCISES: Exercise[] = [
   { name: 'Elevación de piernas', groups: ['Core'], equipment: 'Peso corporal' },
 ]
 
+export function allExercises(custom: Exercise[] | undefined): Exercise[] {
+  if (!custom?.length) return DEFAULT_EXERCISES
+  const names = new Set(DEFAULT_EXERCISES.map((e) => e.name))
+  return [...DEFAULT_EXERCISES, ...custom.filter((e) => !names.has(e.name))]
+}
+
 export function exercisesByGroup(list: Exercise[]): [string, Exercise[]][] {
   return MUSCLE_GROUPS.map((g) => [g, list.filter((ex) => ex.groups[0] === g)])
 }

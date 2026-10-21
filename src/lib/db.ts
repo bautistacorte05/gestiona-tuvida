@@ -169,6 +169,8 @@ export interface UserProfile {
   waterGoal?: number
   /** Meta de horas de sueño por noche (Bienestar). */
   sleepGoal?: number
+  /** Ejercicios de gimnasio personalizados creados por el usuario. */
+  customExercises?: { name: string; groups: string[]; equipment: string }[]
   updatedAt: number
 }
 
